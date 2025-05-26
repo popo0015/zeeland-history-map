@@ -6,9 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Battle of the Scheldt - Interactive Historical Map</title>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
 
@@ -434,6 +433,10 @@
         </div>
     </div>
 
+    <!-- Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
     <script>
         // Application State
         let currentView = 'title';
@@ -547,34 +550,123 @@
             // Check if the map is already initialized
             if (!window._mapInitialized) {
                 const map = L.map('map').setView([51.5, 3.8], 10);
+
+                // Add OpenStreetMap tiles
                 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    attribution: 'Map data © OpenStreetMap contributors'
                 }).addTo(map);
 
                 const troopCities = [
-                    {
-                        coords: [51.4986, 3.6109],
-                        name: "Middelburg",
-                        description: "Liberated in November 1944 during the final phase of the Battle of the Scheldt."
-                    },
-                    {
-                        coords: [51.4426, 3.5739],
-                        name: "Vlissingen",
-                        description: "Landing site for Allied commandos during the amphibious assault on Walcheren."
-                    },
-                    {
-                        coords: [51.5417, 3.4381],
-                        name: "Westkapelle",
-                        description: "Site of intense shelling and the initial dike breach to flood German defenses."
-                    }
+                    { name: "South Beveland", coords: [51.4743, 3.8997] },
+                    { name: "Middelburg", coords: [51.4986, 3.6109] },
+                    { name: "Oostkapelle", coords: [51.5736, 3.5511] },
+                    { name: "Domburg", coords: [51.5636, 3.4931] },
+                    { name: "Westkapelle", coords: [51.5375, 3.4369] },
+                    { name: "Vlissingen", coords: [51.4426, 3.5739] },
+                    { name: "Dishoek", coords: [51.4694, 3.5300] },
+                    { name: "Zoutelande", coords: [51.4922, 3.4877] },
+                    { name: "Rilland", coords: [51.4339, 4.1486] },
+                    { name: "Tholen", coords: [51.5339, 4.2194] },
+                    { name: "St. Annaland", coords: [51.5708, 4.1072] },
+                    { name: "St. Philipsland", coords: [51.6053, 4.0608] },
+                    { name: "Zierikzee", coords: [51.6494, 3.9167] },
+                    { name: "Brouwershaven", coords: [51.7258, 3.9092] }
                 ];
 
                 troopCities.forEach(city => {
                     L.marker(city.coords)
                         .addTo(map)
-                        .bindPopup(`<strong>${city.name}</strong><br>${city.description}`);
+                        .bindPopup(`<strong>${city.name}</strong>`);
                 });
+
+                const movementTroops = [
+                    // Antwerp → Hulst (19-9)
+                    [[51.2194, 4.4025], [51.3725, 4.0100]],
+
+                    // Hulst → Axel → Philippine (mid-Sept)
+                    [[51.3725, 4.0100], [51.3090, 3.9815], [51.3130, 3.8890]],
+
+                    // Philippine → Sas van Gent (19-9)
+                    [[51.3130, 3.8890], [51.3041, 3.8267]],
+
+                    // Sas van Gent → Terneuzen (20-9)
+                    [[51.3041, 3.8267], [51.3380, 3.8360]],
+
+                    // Terneuzen → Zaamslag → Hoek → Biervliet → IJzendijke (17-10)
+                    [[51.3380, 3.8360], [51.3266, 3.6492], [51.3323, 3.6270], [51.3438, 3.5526], [51.3250, 3.5908]],
+
+                    // IJzendijke → Oostburg → Zuidzande (29-10)
+                    [[51.3250, 3.5908], [51.3391, 3.4710], [51.4760, 3.4766]],
+
+                    // Zuidzande → Retranchement → Sluis (1-11)
+                    [[51.4760, 3.4766], [51.4780, 3.4470], [51.3594, 3.5831]]
+                ];
+
+                // 2️⃣ “Movement Toward Zuid-Beveland”
+                const movementZB = [
+                    [[51.3380, 3.8360], [51.4845, 3.8963]],        // Terneuzen → Baarland
+                    [[51.4845, 3.8963], [51.5035, 3.8677], [51.4702, 3.8962], [51.5040, 3.8740]], // Baarland→Borssele→s-Gravenpolder→Goes
+                    [[51.5040, 3.8740], [51.5860, 3.8671], [51.5701, 3.8407]], // Goes→Wolphaartsdijk→Yerseke
+                    [[51.5701, 3.8407], [51.4936, 3.8921]],        // Yerseke→Krabbendijke
+                    [[51.4936, 3.8921], [51.4339, 4.1486]]         // Krabbendijke→Rilland
+                ];
+
+                // 3️⃣ “Crossing to Walcheren”
+                const crossingWalcheren = [
+                    [[51.4743, 3.8997], [51.4873, 3.9043]],        // South Beveland→Sloedam→Arnemuiden
+                    [[51.4873, 3.9043], [51.4986, 3.6109]],        // Arnemuiden→Middelburg
+                    [[51.4986, 3.6109], [51.5736, 3.5511], [51.5636, 3.4931]], // Middelburg→Oostkapelle→Domburg
+                    [[51.5636, 3.4931], [51.5375, 3.4369]],        // Domburg→Westkapelle
+                    [[51.4986, 3.6109], [51.4426, 3.5739]],        // Middelburg→Vlissingen
+                    [[51.4426, 3.5739], [51.4694, 3.5300], [51.4922, 3.4877]], // Vlissingen→Dishoek→Zoutelande
+                    [[51.4339, 4.1486], [51.5339, 4.2194]],        // Rilland→Tholen
+                    [[51.5339, 4.2194], [51.5708, 4.1072], [51.6053, 4.0608], [51.6494, 3.9167], [51.7258, 3.9092]] // Tholen→…→Brouwershaven
+                ];
+
+                function addTroopPath(path, color) {
+                    // 1) Draw the base red line
+                    L.polyline(path, { color: color, weight: 3 }).addTo(map);
+
+
+                    // 2) For each segment, place a rotated SVG arrow at its midpoint
+                    path.slice(0, -1).forEach((pt, i) => {
+                        const next = path[i + 1];
+                        // midpoint
+                        const midLat = (pt[0] + next[0]) / 2;
+                        const midLng = (pt[1] + next[1]) / 2;
+                        // angle in degrees (Leaflet’s lat/lng order flips x/y)
+                        const angle = Math.atan2(
+                            next[1] - pt[1],
+                            next[0] - pt[0]
+                        ) * 180 / Math.PI;
+
+                        // custom DivIcon with inline SVG triangle
+                        const arrowIcon = L.divIcon({
+                            className: '',            // no extra CSS
+                            html: `
+        <div style="
+          transform: rotate(${angle}deg);
+          width:20px; height:20px;
+          display:flex; align-items:center;
+          justify-content:center;
+          ">
+          <svg width="14" height="14" viewBox="0 0 10 10">
+            <polygon points="0,0 10,5 0,10" fill="red"/>
+          </svg>
+        </div>
+      `,
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10],     // center the arrow
+                            interactive: false
+                        });
+
+                        L.marker([midLat, midLng], { icon: arrowIcon }).addTo(map);
+                    });
+                }
+
+                movementTroops.forEach(leg => addTroopPath(leg, 'red'));
+                movementZB.forEach(leg => addTroopPath(leg, 'blue'));
+                crossingWalcheren.forEach(leg => addTroopPath(leg, 'green'));
 
                 window._mapInitialized = true;
             }
@@ -682,6 +774,7 @@
             console.log('Battle of the Scheldt Interactive Map Loaded');
         });
     </script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 </body>
 
 </html>
