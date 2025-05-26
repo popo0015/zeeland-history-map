@@ -20,6 +20,120 @@
             min-height: 100vh;
         }
 
+    /*********************************
+    **  GLOBAL MENU STYLES START   **
+    *********************************/
+
+    /* hamburger button */
+    .menu-button {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 48px;
+      height: 48px;
+      background: #a16207;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s ease;
+    }
+    .menu-button:hover { background: #92400e; }
+
+    /* hamburger icon – three bars */
+    .menu-button span {
+      position: relative;
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: #fff;
+    }
+    .menu-button span::before,
+    .menu-button span::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 22px;
+      height: 2px;
+      background: inherit;
+      transition: transform 0.3s ease;
+    }
+    .menu-button span::before { transform: translateY(-6px); }
+    .menu-button span::after  { transform: translateY( 6px); }
+
+    /* side‑drawer */
+    .side-menu {
+      position: fixed;
+      top: 0;
+      right: 0;
+      height: 100vh;
+      width: 260px;
+      background: #ffffff;
+      box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 55;
+      padding: 24px;
+      overflow-y: auto;
+    }
+    .side-menu.open { transform: translateX(0); }
+
+    .side-menu h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 16px;
+    }
+
+    .side-menu ul { list-style: none; padding: 0; }
+    .side-menu li + li { margin-top: 12px; }
+
+    /* base link / button styling */
+    .side-menu a,
+    .side-menu button {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 12px;
+      font-size: 1.125rem;
+      color: #b45309;
+      cursor: pointer;
+      text-align: left;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      transition: color 0.2s ease;
+    }
+    .side-menu a:hover,
+    .side-menu button:hover { color: #92400e; }
+
+    /* caret icon animation */
+    .dropdown-btn .caret { transition: transform 0.25s ease; }
+    .dropdown-btn.active .caret { transform: rotate(180deg); }
+
+    /* collapsible inner list */
+    .dropdown-container {
+      display: none;
+      flex-direction: column;
+      margin-top: 8px;
+      padding-left: 16px;
+    }
+    .dropdown-container.show { display: flex; }
+    .dropdown-container a { font-size: 1rem; }
+
+    /* keep .hidden helper for JS */
+    .hidden { display: none !important; }
+
+    /*********************************
+    **  GLOBAL MENU STYLES END     **
+    *********************************/
+
+        
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -360,6 +474,33 @@
 
     <!-- Main Map View -->
     <div id="mapView" class="map-view hidden">
+
+       <!-- Global Menu Button -->
+    <button id="menuToggle" class="menu-button" onclick="toggleMenu()">
+        <span></span>
+    </button>
+
+    <!-- Side Menu -->
+    <nav id="sideMenu" class="side-menu" aria-label="Main Navigation">
+        <h2>Menu</h2>
+        <ul>
+            <li><a href="#" onclick="startExperience(); toggleMenu();">Map View</a></li>
+            <li><a href="#" onclick="startStory(); toggleMenu();">Story Mode</a></li>
+            <ul>
+           <button class="dropdown-btn" onclick="toggleDropdown(this)">
+          Artifacts <span class="caret">▾</span>
+        </button>
+        <ul class="dropdown-container">
+          <li><a href="#" onclick="showArtifacts('Weaponly'); toggleMenu();">🗡️Weaponly</a></li>
+          <li><a href="#" onclick="showArtifacts('Tools');  toggleMenu();">🔨Tools</a></li>
+          <li><a href="#" onclick="showArtifacts('Religious_Personal_Items');    toggleMenu();">✝️Personal and Religious items</a></li>
+          <li><a href="#" onclick="showArtifacts('Printed_Materials');  toggleMenu();">📖Printed materials</a></li>
+          <li><a href="#" onclick="showArtifacts('Navigation_Equipment');    toggleMenu();">🧭Navigation Items</a></li>
+          <li><a href="#" onclick="showArtifacts('Miscellaneous');  toggleMenu();">🧢Miscellaneous items</a></li>
+        </ul>
+        </ul>
+    </nav>
+
         <div class="container">
             <!-- Header -->
             <div class="header">
@@ -522,6 +663,25 @@
     </div>
 
     <script>
+         /* open / close side-menu */
+    function toggleMenu() {
+      document.getElementById("sideMenu").classList.toggle("open");
+    }
+    // close on outside click
+    document.addEventListener("click", (e) => {
+      const menu = document.getElementById("sideMenu");
+      const btn = document.getElementById("menuToggle");
+      if (!menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.classList.remove("open");
+      }
+    });
+
+    /* dropdown expand / collapse */
+    function toggleDropdown(btn) {
+      btn.classList.toggle("active");
+      const list = btn.nextElementSibling;
+      list.classList.toggle("show");
+    }
         // Application State
         let currentView = 'title';
         let storySlideIndex = 0;
@@ -684,48 +844,7 @@
             storySlideIndex = 0;
         }
 
-        // Artifact Functions
-        function toggleArtifacts() {
-            artifactsVisible = !artifactsVisible;
-            const markers = document.getElementById('artifactMarkers');
-            const paths = document.getElementById('troopPaths');
-
-            if (artifactsVisible) {
-                markers.classList.remove('hidden');
-                paths.classList.remove('hidden');
-            } else {
-                markers.classList.add('hidden');
-                paths.classList.add('hidden');
-            }
-        }
-
-        function showArtifacts(region) {
-            const sidebar = document.getElementById('artifactSidebar');
-            const content = document.getElementById('artifactContent');
-
-            const regionArtifacts = artifacts[region] || [];
-
-            content.innerHTML = `
-                <h3 style="font-size: 1.25rem; font-weight: 600; color: #92400e; margin-bottom: 16px; text-transform: capitalize;">${region} Artifacts</h3>
-                <div>
-                    ${regionArtifacts.map(artifact => `
-                        <div class="artifact-item">
-                            <img src="${artifact.image}" alt="${artifact.name}">
-                            <h4>${artifact.name}</h4>
-                            <p class="artifact-category">${artifact.category}</p>
-                            <p class="artifact-description">${artifact.description}</p>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-
-            sidebar.classList.add('open');
-        }
-
-        function closeArtifacts() {
-            document.getElementById('artifactSidebar').classList.remove('open');
-        }
-
+       
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function () {
             console.log('Battle of the Scheldt Interactive Map Loaded');
