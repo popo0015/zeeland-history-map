@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Battle of the Scheldt – Interactive Historical Map</title>
     <!-- Google font -->
     <link rel="preconnect" href="https://fonts.gstatic.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet" />
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,371 +16,373 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
-      /* --------------------  base / reset  -------------------- */
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+        /* --------------------  base / reset  -------------------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-      body {
-        font-family: "Crimson Text", serif;
-        background: linear-gradient(135deg, #f4f1e8 0%, #e8e2d4 100%);
-        min-height: 100vh;
-      }
+        body {
+            font-family: "Crimson Text", serif;
+            background: linear-gradient(135deg, #f4f1e8 0%, #e8e2d4 100%);
+            min-height: 100vh;
+        }
 
-      /* --------------------  utility  -------------------- */
-      .hidden {
-        display: none !important;
-      }
+        /* --------------------  utility  -------------------- */
+        .hidden {
+            display: none !important;
+        }
 
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-      }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-      .btn,
-      .btn-secondary {
-        display: inline-block;
-        border: none;
-        cursor: pointer;
-        font-size: 1.125rem;
-        font-weight: 600;
-        padding: 14px 28px;
-        transition: background 0.25s ease;
-        color: #fff;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      }
+        .btn,
+        .btn-secondary {
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+            font-size: 1.125rem;
+            font-weight: 600;
+            padding: 14px 28px;
+            transition: background 0.25s ease;
+            color: #fff;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
 
-      .btn {
-        background: #a16207;
-      }
+        .btn {
+            background: #a16207;
+        }
 
-      .btn:hover {
-        background: #92400e;
-      }
+        .btn:hover {
+            background: #92400e;
+        }
 
-      .btn-secondary {
-        background: #d97706;
-      }
+        .btn-secondary {
+            background: #d97706;
+        }
 
-      .btn-secondary:hover {
-        background: #b45309;
-      }
+        .btn-secondary:hover {
+            background: #b45309;
+        }
 
-      /* --------------------  hamburger + side-drawer  -------------------- */
-      .menu-button {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        width: 48px;
-        height: 48px;
-        background: #a16207;
-        border: none;
-        border-radius: 50%;
-        cursor: pointer;
-        z-index: 60;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.3s ease;
-      }
+        /* --------------------  hamburger + side-drawer  -------------------- */
+        .menu-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 48px;
+            height: 48px;
+            background: #a16207;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 60;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
 
-      .menu-button:hover {
-        background: #92400e;
-      }
+        .menu-button:hover {
+            background: #92400e;
+        }
 
-      .menu-button span {
-        position: relative;
-        display: block;
-        width: 22px;
-        height: 2px;
-        background: #fff;
-      }
+        .menu-button span {
+            position: relative;
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: #fff;
+        }
 
-      .menu-button span::before,
-      .menu-button span::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        width: 22px;
-        height: 2px;
-        background: inherit;
-        transition: transform 0.3s ease;
-      }
+        .menu-button span::before,
+        .menu-button span::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 22px;
+            height: 2px;
+            background: inherit;
+            transition: transform 0.3s ease;
+        }
 
-      .menu-button span::before {
-        transform: translateY(-6px);
-      }
+        .menu-button span::before {
+            transform: translateY(-6px);
+        }
 
-      .menu-button span::after {
-        transform: translateY(6px);
-      }
+        .menu-button span::after {
+            transform: translateY(6px);
+        }
 
-      .side-menu {
-        position: fixed;
-        top: 0;
-        right: 0;
-        height: 100vh;
-        width: 260px;
-        background: #fff;
-        box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1);
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-        z-index: 55;
-        padding: 24px;
-        overflow-y: auto;
-      }
+        .side-menu {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            width: 260px;
+            background: #fff;
+            box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 55;
+            padding: 24px;
+            overflow-y: auto;
+        }
 
-      .side-menu.open {
-        transform: translateX(0);
-      }
+        .side-menu.open {
+            transform: translateX(0);
+        }
 
-      .side-menu h2 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #92400e;
-        margin-bottom: 16px;
-      }
+        .side-menu h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 16px;
+        }
 
-      .side-menu ul {
-        list-style: none;
-      }
+        .side-menu ul {
+            list-style: none;
+        }
 
-      .side-menu li + li {
-        margin-top: 12px;
-      }
+        .side-menu li+li {
+            margin-top: 12px;
+        }
 
-      .side-menu a {
-        display: block;
-        width: 100%;
-        padding: 12px;
-        background: none;
-        border: none;
-        font-size: 1.125rem;
-        color: #b45309;
-        text-decoration: none;
-        text-align: left;
-        transition: color 0.2s ease;
-      }
+        .side-menu a {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: none;
+            border: none;
+            font-size: 1.125rem;
+            color: #b45309;
+            text-decoration: none;
+            text-align: left;
+            transition: color 0.2s ease;
+        }
 
-      .side-menu a:hover {
-        color: #92400e;
-      }
+        .side-menu a:hover {
+            color: #92400e;
+        }
 
-      /* --------------------  title page  -------------------- */
-      .title-page {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-image: url("/assets/images/Vlissingen/35530.jpg");
-        background-size: cover;
-      }
+        /* --------------------  title page  -------------------- */
+        .title-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: url("/assets/images/Vlissingen/35530.jpg");
+            background-size: cover;
+        }
 
-      .title-content {
-        text-align: center;
-        background: #fff;
-        padding: 60px;
-        border: 3px solid #8b7355;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        max-width: 800px;
-      }
-
-      .title-content h1 {
-        font-size: 3.5rem;
-        color: #92400e;
-        margin-bottom: 16px;
-      }
-
-      .title-content h2 {
-        font-size: 1.5rem;
-        color: #b45309;
-        margin-bottom: 24px;
-      }
-
-      .title-content p {
-        font-size: 1.125rem;
-        color: #a16207;
-        line-height: 1.7;
-        margin-bottom: 32px;
-      }
-
-      /* --------------------  map views (main + walcheren)  -------------------- */
-      .map-view {
-        min-height: 100vh;
-        padding: 32px 0;
-      }
-
-      .header {
-        text-align: center;
-        margin-bottom: 32px;
-      }
-
-      .header h1 {
-        font-size: 2.5rem;
-        color: #92400e;
-        margin-bottom: 8px;
-      }
-
-      .header p {
-        font-size: 1.125rem;
-        color: #b45309;
-      }
-
-      .map-container {
-        background: #fff;
-        border: 3px solid #8b7355;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        position: relative;
-      }
-
-      .map-region {
-        transition: transform 0.3s ease, filter 0.3s ease;
-        cursor: pointer;
-      }
-
-      .map-region:hover {
-        transform: scale(1.02);
-        filter: brightness(1.1);
-      }
-
-      /* --------------------  artifact gallery  -------------------- */
-      .gallery-controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        justify-content: center;
-        margin-bottom: 24px;
-      }
-
-      .artifact-grid {
-        display: grid;
-        grid-template-columns: repeat(
-          auto-fill,
-          minmax(180px, 250px)
-        ); /* prevent over‑stretching */
-        gap: 20px;
-        justify-content: center; /* center the row when few items */
-      }
-
-      .artifact-card {
-        position: relative;
-        overflow: hidden;
-        border: 1px solid #fde68a;
-        border-radius: 8px;
-        box-shadow: 0 10px 15px -5px rgba(0, 0, 0, 0.08);
-        transition: transform 0.25s ease;
-        cursor: pointer;
-      }
-
-      .artifact-card:hover {
-        transform: translateY(-4px);
-      }
-
-      .artifact-card img {
-        width: 100%;
-        aspect-ratio: 4/3; /* keep a consistent ratio instead of fixed height */
-        object-fit: cover;
-      }
-
-      .artifact-overlay {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: rgba(0, 0, 0, 0.75);
-        color: #fff;
-        padding: 10px;
-        transform: translateY(100%);
-        transition: transform 0.3s ease;
-        font-size: 0.875rem;
-      }
-
-      .artifact-card:hover .artifact-overlay,
-      .artifact-card:focus .artifact-overlay {
-        transform: translateY(0);
-      }
-
-      .artifact-overlay h4 {
-        font-size: 1rem;
-        margin-bottom: 4px;
-        color: #fbbf24;
-      }
-
-      /* --------------------  modal for full artifact view  -------------------- */
-      .modal {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.85);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 80;
-      }
-
-      .modal.hidden {
-        display: none !important;
-      }
-
-      .modal-content {
-        background: #ffffff;
-        width: 90%;
-        max-width: 600px;
-        padding: 24px;
-        border-radius: 8px;
-        text-align: center;
-        position: relative;
-      }
-
-      .modal-content img {
-        width: 100%;
-        height: auto;
-        margin-bottom: 16px;
-        border-radius: 8px;
-      }
-
-      .modal-close {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background: #dc2626;
-        color: #fff;
-        border: none;
-        width: 32px;
-        height: 32px;
-        font-size: 1.25rem;
-        line-height: 32px;
-        border-radius: 50%;
-        cursor: pointer;
-      }
-
-      @media (max-width: 768px) {
         .title-content {
-          padding: 40px 20px;
+            text-align: center;
+            background: #fff;
+            padding: 60px;
+            border: 3px solid #8b7355;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-width: 800px;
         }
 
         .title-content h1 {
-          font-size: 2.25rem;
+            font-size: 3.5rem;
+            color: #92400e;
+            margin-bottom: 16px;
         }
 
+        .title-content h2 {
+            font-size: 1.5rem;
+            color: #b45309;
+            margin-bottom: 24px;
+        }
+
+        .title-content p {
+            font-size: 1.125rem;
+            color: #a16207;
+            line-height: 1.7;
+            margin-bottom: 32px;
+        }
+
+        /* --------------------  map views (main + walcheren)  -------------------- */
         .map-view {
             min-height: 100vh;
-            padding: 32px;
+            padding: 32px 0;
         }
 
-        #mapView {
-            width: 100%;
-            height: 100vh;
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
         }
 
-        #map {
+        .header h1 {
+            font-size: 2.5rem;
+            color: #92400e;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            color: #b45309;
+        }
+
+        .map-container {
+            background: #fff;
+            border: 3px solid #8b7355;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            position: relative;
+        }
+
+        .map-region {
+            transition: transform 0.3s ease, filter 0.3s ease;
+            cursor: pointer;
+        }
+
+        .map-region:hover {
+            transform: scale(1.02);
+            filter: brightness(1.1);
+        }
+
+        /* --------------------  artifact gallery  -------------------- */
+        .gallery-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .artifact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill,
+                    minmax(180px, 250px));
+            /* prevent over‑stretching */
+            gap: 20px;
+            justify-content: center;
+            /* center the row when few items */
+        }
+
+        .artifact-card {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -5px rgba(0, 0, 0, 0.08);
+            transition: transform 0.25s ease;
+            cursor: pointer;
+        }
+
+        .artifact-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .artifact-card img {
             width: 100%;
-            height: 100%;
-            z-index: 0;
-            background: #92400e;
-            filter: grayscale(0.7) contrast(1.4);
+            aspect-ratio: 4/3;
+            /* keep a consistent ratio instead of fixed height */
+            object-fit: cover;
+        }
+
+        .artifact-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            padding: 10px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            font-size: 0.875rem;
+        }
+
+        .artifact-card:hover .artifact-overlay,
+        .artifact-card:focus .artifact-overlay {
+            transform: translateY(0);
+        }
+
+        .artifact-overlay h4 {
+            font-size: 1rem;
+            margin-bottom: 4px;
+            color: #fbbf24;
+        }
+
+        /* --------------------  modal for full artifact view  -------------------- */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 80;
+        }
+
+        .modal.hidden {
+            display: none !important;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            width: 90%;
+            max-width: 600px;
+            padding: 24px;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-content img {
+            width: 100%;
+            height: auto;
+            margin-bottom: 16px;
+            border-radius: 8px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #dc2626;
+            color: #fff;
+            border: none;
+            width: 32px;
+            height: 32px;
+            font-size: 1.25rem;
+            line-height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .title-content {
+                padding: 40px 20px;
+            }
+
+            .title-content h1 {
+                font-size: 2.25rem;
+            }
+
+            .map-view {
+                min-height: 100vh;
+                padding: 32px;
+            }
+
+            #mapView {
+                width: 100%;
+                height: 100vh;
+            }
+
+            #map {
+                width: 100%;
+                height: 100%;
+                z-index: 0;
+                background: #92400e;
+                filter: grayscale(0.7) contrast(1.4);
+            }
         }
 
         /* deep brown/black pin */
@@ -707,240 +707,189 @@
                 padding: 16px;
             }
 
-        .menu-button {
-          width: 40px;
-          height: 40px;
+            .menu-button {
+                width: 40px;
+                height: 40px;
+            }
         }
-      }
 
-      .modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.8);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-      }
-      .modal.hidden {
-        display: none;
-      }
-      .modal-content.wide {
-        display: flex;
-        flex-direction: row;
-        background: #fff;
-        width: 90vw;
-        max-width: 1200px;
-        height: 80vh;
-        overflow: hidden;
-        border-radius: 12px;
-      }
-      .modal-left,
-      .modal-right {
-        flex: 1;
-        padding: 24px;
-        overflow-y: auto;
-      }
-      .modal-left img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        border-radius: 8px;
-      }
-      .modal-close {
-        position: absolute;
-        top: 16px;
-        right: 16px;
-        background: #dc2626;
-        color: white;
-        border: none;
-        font-size: 24px;
-        cursor: pointer;
-        padding: 4px 12px;
-        border-radius: 6px;
-      }
-      @media (max-width: 768px) {
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
+
         .modal-content.wide {
-          flex-direction: column;
-          height: auto;
+            display: flex;
+            flex-direction: row;
+            background: #fff;
+            width: 90vw;
+            max-width: 1200px;
+            height: 80vh;
+            overflow: hidden;
+            border-radius: 12px;
         }
-        .modal-close {
-          top: 8px;
-          right: 8px;
-        }
-      }
-    </style>
-  </head>
 
-  <body>
+        .modal-left,
+        .modal-right {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .modal-left img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #dc2626;
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px 12px;
+            border-radius: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content.wide {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .modal-close {
+                top: 8px;
+                right: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
     <!-- =====  TITLE  ===== -->
     <section id="titlePage" class="title-page">
-      <div class="title-content">
-        <h1>The Battle of the Scheldt</h1>
-        <h2>October – November 1944</h2>
-        <p>
-          Explore the liberation of Zeeland through an interactive journey of
-          courage, strategy and sacrifice. Follow the Allied forces as they
-          fought to open the vital port of Antwerp.
-        </p>
-        <button class="btn" onclick="startExperience()">
-          Begin Historical Journey
-        </button>
-        <button class="btn btn-secondary" onclick="startStory()">
-          Start Story Mode
-        </button>
-      </div>
+        <div class="title-content">
+            <h1>The Battle of the Scheldt</h1>
+            <h2>October – November 1944</h2>
+            <p>
+                Explore the liberation of Zeeland through an interactive journey of
+                courage, strategy and sacrifice. Follow the Allied forces as they
+                fought to open the vital port of Antwerp.
+            </p>
+            <button class="btn" onclick="startExperience()">
+                Begin Historical Journey
+            </button>
+            <button class="btn btn-secondary" onclick="startStory()">
+                Start Story Mode
+            </button>
+        </div>
     </section>
 
     <!-- =====  MAIN MAP VIEW  ===== -->
-    <section id="mapView" class="map-view hidden">
-      <!-- hamburger -->
-      <button id="menuToggle" class="menu-button" onclick="toggleMenu()">
-        <span></span>
-      </button>
-      <!-- side-drawer -->
-      <nav id="sideMenu" class="side-menu" aria-label="Main Navigation">
-        <h2>Menu</h2>
-        <ul>
-          <li>
-            <a href="#" onclick="startExperience(); toggleMenu();">Map View</a>
-          </li>
-          <li>
-            <a href="#" onclick="startStory(); toggleMenu();">Story Mode</a>
-          </li>
-          <li>
-            <a href="#" onclick="showArtifactGallery(); toggleMenu();"
-              >Artifacts</a
-            >
-          </li>
-        </ul>
-      </nav>
+    <section>
+        <!-- hamburger -->
+        <button id="menuToggle" class="menu-button" onclick="toggleMenu()">
+            <span></span>
+        </button>
+        <!-- side-drawer -->
+        <nav id="sideMenu" class="side-menu" aria-label="Main Navigation">
+            <h2>Menu</h2>
+            <ul>
+                <li>
+                    <a href="#" onclick="startExperience(); toggleMenu();">Map View</a>
+                </li>
+                <li>
+                    <a href="#" onclick="startStory(); toggleMenu();">Story Mode</a>
+                </li>
+                <li>
+                    <a href="#" onclick="showArtifactGallery(); toggleMenu();">Artifacts</a>
+                </li>
+            </ul>
+        </nav>
 
-      <div class="container">
-        <header class="header">
-          <h1>Zeeland – Battle of the Scheldt</h1>
-          <p>October – November 1944</p>
-          <div class="controls">
-            <button class="btn btn-secondary" onclick="startStory()">
-              Start Story Mode
-            </button>
-            <button class="btn" onclick="showArtifactGallery()">
-              View Artifacts
-            </button>
-          </div>
-        </header>
+        <!-- Main Map View -->
+        <div id="mapView" class="map-view hidden">
+            <div class="container">
+                <!-- Header -->
+                <div class="header">
+                    <h1>Zeeland - Battle of the Scheldt</h1>
+                    <div class="controls">
+                        <button onclick="startStory()" class="btn btn-secondary">
+                            Start Story Mode
+                        </button>
+                        <button onclick="toggleArtifacts()" class="btn">
+                            Toggle Artifacts
+                        </button>
+                    </div>
+                </div>
 
-        <div class="map-container">
-          <!-- SVG simplified (the detailed one from original left out for brevity) -->
-          <svg
-            id="zeelandMap"
-            viewBox="0 0 800 600"
-            style="width: 100%; height: auto"
-          >
-            <!-- Zeeland Outline -->
-            <path
-              d="M100 200 L300 180 L500 200 L650 250 L700 350 L650 450 L500 480 L300 460 L100 400 Z"
-              fill="#e8dcc0"
-              stroke="#8b7355"
-              stroke-width="2"
-            />
+                <!-- Map Container -->
+                <div class="map-container">
+                    <div id="map"></div>
 
-            <!-- Walcheren Island clickable -->
-            <g id="walcheren" class="map-region" onclick="zoomToWalcheren()">
-              <circle
-                cx="200"
-                cy="300"
-                r="60"
-                fill="#d4c4a0"
-                stroke="#8b7355"
-                stroke-width="2"
-              />
-              <text
-                x="200"
-                y="305"
-                text-anchor="middle"
-                style="font-size: 14px; font-weight: 600; fill: #92400e"
-              >
-                Walcheren
-              </text>
-            </g>
-            <!-- additional islands... -->
-          </svg>
-        </div>
-    </div>
+                    <div id="legend">
+                        <h4>Troop Movements</h4>
+                        <div><span class="leg-swatch red"></span>Main push</div>
+                        <div><span class="leg-swatch gray"></span>Zuid-Beveland</div>
+                        <div><span class="leg-swatch green"></span>Walcheren</div>
+                    </div>
 
-    <!-- Main Map View -->
-    <div id="mapView" class="map-view hidden">
-        <div class="container">
-            <!-- Header -->
-            <div class="header">
-                <h1>Zeeland - Battle of the Scheldt</h1>
-                <div class="controls">
-                    <button onclick="startStory()" class="btn btn-secondary">
-                        Start Story Mode
-                    </button>
-                    <button onclick="toggleArtifacts()" class="btn">
-                        Toggle Artifacts
-                    </button>
+                    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+                        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
                 </div>
             </div>
-
-            <!-- Map Container -->
-            <div class="map-container">
-                <div id="map"></div>
-
-                <div id="legend">
-                    <h4>Troop Movements</h4>
-                    <div><span class="leg-swatch red"></span>Main push</div>
-                    <div><span class="leg-swatch gray"></span>Zuid-Beveland</div>
-                    <div><span class="leg-swatch green"></span>Walcheren</div>
-                </div>
-
-                <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-                    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-          </div>
         </div>
-      </div>
     </section>
 
     <!-- ===== ARTIFACT GALLERY ===== -->
     <section id="artifactGallery" class="map-view hidden">
-      <div class="container">
-        <header class="header">
-          <h1>Artifact Gallery</h1>
-          <p>
-            Select a category to explore original WWII objects recovered in
-            Zeeland.
-          </p>
-          <button class="btn" onclick="backToMap()">← Back to Map</button>
-        </header>
-        <div id="galleryFilters" class="gallery-controls"></div>
-        <div id="artifactGrid" class="artifact-grid"></div>
-      </div>
+        <div class="container">
+            <header class="header">
+                <h1>Artifact Gallery</h1>
+                <p>
+                    Select a category to explore original WWII objects recovered in
+                    Zeeland.
+                </p>
+                <button class="btn" onclick="backToMap()">← Back to Map</button>
+            </header>
+            <div id="galleryFilters" class="gallery-controls"></div>
+            <div id="artifactGrid" class="artifact-grid"></div>
+        </div>
     </section>
 
     <!--  Modal HTML -->
     <div id="artifactModal" class="modal hidden" onclick="closeModal(event)">
-      <div class="modal-content wide">
-        <div class="modal-left">
-          <img id="modalImg" src="" alt="Artifact image" />
+        <div class="modal-content wide">
+            <div class="modal-left">
+                <img id="modalImg" src="" alt="Artifact image" />
+            </div>
+            <div class="modal-right">
+                <button class="modal-close" onclick="closeModal(event)">×</button>
+                <h3 id="modalTitle"></h3>
+                <p id="modalDesc"></p>
+            </div>
         </div>
-        <div class="modal-right">
-          <button class="modal-close" onclick="closeModal(event)">×</button>
-          <h3 id="modalTitle"></h3>
-          <p id="modalDesc"></p>
-        </div>
-      </div>
     </div>
 
     <!-- =====  STORY MODE  ===== -->
-    <section
-      id="storyMode"
-      class="hidden"
-      style="
+    <section id="storyMode" class="hidden" style="
         min-height: 100vh;
         background: #000;
         color: #fff;
@@ -948,32 +897,20 @@
         align-items: center;
         justify-content: center;
         position: relative;
-      "
-    >
-      <button
-        class="btn"
-        style="position: absolute; top: 16px; right: 16px; background: #dc2626"
-        onclick="exitStory()"
-      >
-        Exit Story
-      </button>
-      <div
-        id="storyContent"
-        style="max-width: 800px; padding: 32px; text-align: center"
-      ></div>
-      <button
-        id="nextSlideBtn"
-        class="btn"
-        style="
+      ">
+        <button class="btn" style="position: absolute; top: 16px; right: 16px; background: #dc2626"
+            onclick="exitStory()">
+            Exit Story
+        </button>
+        <div id="storyContent" style="max-width: 800px; padding: 32px; text-align: center"></div>
+        <button id="nextSlideBtn" class="btn" style="
           position: absolute;
           bottom: 32px;
           left: 50%;
           transform: translateX(-50%);
-        "
-        onclick="nextStorySlide()"
-      >
-        Next →
-      </button>
+        " onclick="nextStorySlide()">
+            Next →
+        </button>
     </section>
 
     <!-- Leaflet -->
@@ -981,10 +918,11 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
-        // Application State
-        let currentView = 'title';
+        /* =====================  APP STATE  ===================== */
+        let currentView = "title"; // title | map | walcheren | gallery | story
         let storySlideIndex = 0;
-        // Story Data
+        let galleryCategory = "All"; // filter within gallery
+
         // check with middelburg, vlissingen, westkapelle -> match fact with historical:)
         const storySlides = [
             {
@@ -1231,52 +1169,12 @@
             loadMap();
         }
 
-  /* =====================  DATA  ===================== */
-      const storySlides = [
-        {
-          title: "October 1944 – The Strategic Importance",
-          content:
-            "The port of Antwerp was crucial for Allied supply lines. However, the Scheldt estuary remained under German control, making the port unusable.",
-          image: "/assets/images/Middelburg/6861.jpg",
-        },
-        {
-          title: "The German Fortress",
-          content:
-            "German forces had heavily fortified Walcheren Island and the surrounding areas, creating a formidable defensive network.",
-          image: "/assets/images/Middelburg/67111.jpg",
-        },
-        {
-          title: "South Beveland Assault",
-          content:
-            "Allied forces began their assault on South Beveland, fighting through flooded polders and determined German resistance.",
-          image: "/assets/images/Middelburg/FO066408.jpg",
-        },
-        {
-          title: "The Crossing to Walcheren",
-          content:
-            "1 November 1944 – Allied forces launched amphibious assaults on Walcheren Island from multiple directions.",
-          image: "/assets/images/Vlissingen/35483.jpg",
-        },
-        {
-          title: "Liberation of Middelburg",
-          content:
-            "After fierce fighting, Middelburg was liberated, marking a crucial victory in the battle for Zeeland.",
-          image: "/assets/images/Vlissingen/35530.jpg",
-        },
-        {
-          title: "Victory and Liberation",
-          content:
-            "By 8 November 1944, Zeeland was liberated, opening the vital supply route through Antwerp.",
-          image: "/assets/images/Vlissingen/35531.jpg",
-        },
-      ];
-
-      // Artifact data: grouped per region, each item has category we can filter on
-      const artifacts = [
-        {
-          name: "Dolk, een zogenaamde 'stormdolk' M-1917",
-          category: "Weaponry",
-          description: `De ontwikkeling van de Nederlandse stormdolk heeft haar oorsprong in 1917. In dat jaar werden de Stormtroepen opgericht als een speciale eenheid, die de reguliere troepen bij een aanval moesten voorgaan. Door de ervaringen van de op dat moment elders in Europa woedende loopgraven oorlog, was gebleken dat er behoeft was aan een kort handwapen voor man tegen man gevecht.
+        // Artifact data: grouped per region, each item has category we can filter on
+        const artifacts = [
+            {
+                name: "Dolk, een zogenaamde 'stormdolk' M-1917",
+                category: "Weaponry",
+                description: `De ontwikkeling van de Nederlandse stormdolk heeft haar oorsprong in 1917. In dat jaar werden de Stormtroepen opgericht als een speciale eenheid, die de reguliere troepen bij een aanval moesten voorgaan. Door de ervaringen van de op dat moment elders in Europa woedende loopgraven oorlog, was gebleken dat er behoeft was aan een kort handwapen voor man tegen man gevecht.
 De geweren en karabijnen met een daarop gemonteerde bajonet was niet goed hanteerbaar in de loopgraaf. Er was weer hernieuwde belangstelling voor de aloude dolk. Als basis voor de stormdolk werden afgekeurde spoorrails gebruikt, de tweesnijdende kling werd daar van gesmeed . Het handvat werd gemaakt van notenhout en de schede van rundleder.
 Op 1 oktober 1917 werd het prototype goedgekeurd en werden er 30.000 besteld bij de Artillerie Inrichtingen. De verwachting was dat er uiteindelijk ca. 50.000 nodig zouden zijn. De eerste dolken werden in maart 1918 uitgereikt.
 Gedurende de mobilisatie in 1939-1940 werd de stormdolk opnieuw uitgereikt aan:
@@ -1284,54 +1182,54 @@ Gedurende de mobilisatie in 1939-1940 werd de stormdolk opnieuw uitgereikt aan:
 2. alle bereden officieren (de dolk te dragen in de drager van het (draagriemenstelsel)
 3. alle bereden onderofficieren, voor zover deze niet van een karabijn zijn voorzien (de dolk te dragen aan de koppel).
 De dolken die daarna nog over waren konden door de Commandanten worden uitgereikt aan troepen die daar nog behoefte aan hadden.`,
-          image: "assets/images/Category/Weaponry/BMZ-2022_02_0003.jpg",
-        },
-        {
-          name: "rekenliniaal",
-          category: "tools",
-          description: `Duitse waaierhoekmeter t.b.v. artilleriedoeleinden.`,
-          image: "assets/images/Category/Tools/SBKZ-000046.jpg",
-        },
-        {
-          name: "centraalvuurgeweer",
-          category: "Weaponry",
-          description: `8-schots centraalvuurgeweer systeem Lee Enfield model MkIII, kaliber 7.7 x 56 R (.303)`,
-          image:
-            "assets/images/Category/Weaponry/12b10ea5-3a1b-41b3-b027-d0ccc2913666.jpg",
-        },
-        {
-          name: "gereedschapskist - 2cm Flak 30 gereedschapskist, met gedeeltelijke inhoud",
-          category: "tools",
-          description: `Zware stalen gereedschapskist met een grijze verfafwerking. Deze kist bevat gereedschap voor een 2 cm Flak 30 geschut wat aan boord stond van een schip van de Duitse Kriegsmarine.`,
-          image: "assets/images/Category/Tools/SBKZ-000026b.jpg",
-        },
-        {
-          name: "certificaat",
-          category: "Printed materials",
-          description: `Dit ingelijste certificaat is een erkenning van het buitengewone verzetswerk van Janna Huissen-Lokerse tijdens de Tweede Wereldoorlog. Janna ontving twee onderscheidingen van de geallieerden voor haar moedige daden: één van Generaal Dwight D. Eisenhower en een Award van een bekende Marshal. Dit specifieke certificaat was voor haar van grote persoonlijke waarde en hing boven haar bed als een constante herinnering aan haar bijdragen aan de bevrijding.
+                image: "assets/images/Category/Weaponry/BMZ-2022_02_0003.jpg",
+            },
+            {
+                name: "rekenliniaal",
+                category: "tools",
+                description: `Duitse waaierhoekmeter t.b.v. artilleriedoeleinden.`,
+                image: "assets/images/Category/Tools/SBKZ-000046.jpg",
+            },
+            {
+                name: "centraalvuurgeweer",
+                category: "Weaponry",
+                description: `8-schots centraalvuurgeweer systeem Lee Enfield model MkIII, kaliber 7.7 x 56 R (.303)`,
+                image:
+                    "assets/images/Category/Weaponry/12b10ea5-3a1b-41b3-b027-d0ccc2913666.jpg",
+            },
+            {
+                name: "gereedschapskist - 2cm Flak 30 gereedschapskist, met gedeeltelijke inhoud",
+                category: "tools",
+                description: `Zware stalen gereedschapskist met een grijze verfafwerking. Deze kist bevat gereedschap voor een 2 cm Flak 30 geschut wat aan boord stond van een schip van de Duitse Kriegsmarine.`,
+                image: "assets/images/Category/Tools/SBKZ-000026b.jpg",
+            },
+            {
+                name: "certificaat",
+                category: "Printed materials",
+                description: `Dit ingelijste certificaat is een erkenning van het buitengewone verzetswerk van Janna Huissen-Lokerse tijdens de Tweede Wereldoorlog. Janna ontving twee onderscheidingen van de geallieerden voor haar moedige daden: één van Generaal Dwight D. Eisenhower en een Award van een bekende Marshal. Dit specifieke certificaat was voor haar van grote persoonlijke waarde en hing boven haar bed als een constante herinnering aan haar bijdragen aan de bevrijding.
  
 In de oorlogsjaren verrichtte Janna ondergronds verzetswerk, waarbij ze een actieve rol speelde in het ondersteunen van onderduikers. Ze voorzag hen van rookwaar en bonnen en hielp zelfs een Engelse piloot, die neergeschoten was nabij Nisse, te vervoeren. Met behulp van Henk Verhage van de veerdienst, die vloeiend Engels sprak, slaagde ze erin de piloot per fiets naar een boot te brengen voor verder vervoer naar Terneuzen, vanwaar hij probeerde Engeland te bereiken.
 Janna trouwde op 26 oktober 1945 met Chris Huissen.`,
-          image: "assets/images/Category/Printed Materials/SBKZ-003142a.jpg",
-        },
-        {
-          name: "distributiekaart",
-          category: "Printed materials",
-          description: `Dit object is een 'Rijks-bruinbroodkaart', een distributiekaart die tijdens de Tweede Wereldoorlog in Nederland werd gebruikt om de schaarse voedselvoorraden, zoals brood en meel, te verdelen. Deze kaarten waren deel van een strikt gereguleerd systeem dat burgers recht gaf op een bepaalde hoeveelheid voedsel per periode, in dit geval voor de twaalfde week. Op de kaart staan specifieke regels vermeld, zoals het verbod op het geheel of gedeeltelijk overdragen van de kaart en het verbod om losse bonnen te gebruiken. Ook mocht de kaart niet aan de bakker of winkelier in bewaring worden gegeven en de verkoper moest de bonnen afscheuren. Het overtreden van de distributieregels kon bestraft worden volgens de Distributiewet van 1916, wat de ernst van deze reglementen onderstreept. Dit soort kaarten is een herinnering aan de moeilijke tijden van schaarste en de complexe systemen die nodig waren om de verdeling van essentiële goederen te beheren.`,
-          image: "assets/images/Category/Printed Materials/SBKZ-003505.jpg",
-        },
-        {
-          name: "(scheeps)klok , Kriegsmarine",
-          category: "Navigation Equipment",
-          description: `Een Keininger en Obergfell U Boot klok met een acht daags uurwerk. Verzilverde wijzerplaat met de M van marine en Kriegsmarine logo.  Wijzerplaat met Arabische cijfers en secondewijzer.  De klok wordt luchtdicht afgesloten doormiddel van een deurtje met glas.  Aan de achterzijde voorzien van drie ophangpunten.
+                image: "assets/images/Category/Printed Materials/SBKZ-003142a.jpg",
+            },
+            {
+                name: "distributiekaart",
+                category: "Printed materials",
+                description: `Dit object is een 'Rijks-bruinbroodkaart', een distributiekaart die tijdens de Tweede Wereldoorlog in Nederland werd gebruikt om de schaarse voedselvoorraden, zoals brood en meel, te verdelen. Deze kaarten waren deel van een strikt gereguleerd systeem dat burgers recht gaf op een bepaalde hoeveelheid voedsel per periode, in dit geval voor de twaalfde week. Op de kaart staan specifieke regels vermeld, zoals het verbod op het geheel of gedeeltelijk overdragen van de kaart en het verbod om losse bonnen te gebruiken. Ook mocht de kaart niet aan de bakker of winkelier in bewaring worden gegeven en de verkoper moest de bonnen afscheuren. Het overtreden van de distributieregels kon bestraft worden volgens de Distributiewet van 1916, wat de ernst van deze reglementen onderstreept. Dit soort kaarten is een herinnering aan de moeilijke tijden van schaarste en de complexe systemen die nodig waren om de verdeling van essentiële goederen te beheren.`,
+                image: "assets/images/Category/Printed Materials/SBKZ-003505.jpg",
+            },
+            {
+                name: "(scheeps)klok , Kriegsmarine",
+                category: "Navigation Equipment",
+                description: `Een Keininger en Obergfell U Boot klok met een acht daags uurwerk. Verzilverde wijzerplaat met de M van marine en Kriegsmarine logo.  Wijzerplaat met Arabische cijfers en secondewijzer.  De klok wordt luchtdicht afgesloten doormiddel van een deurtje met glas.  Aan de achterzijde voorzien van drie ophangpunten.
  
 Deze klok ik uit een Kriegsmarine schip geschroefd welke achter was gebleven in de haven van Terneuzen na de bevrijding in 1944. Wij hebben de klok verkregen via Piet de Back uit Oost-Souburg, die hem van een vriend (die hem in 1944 zelf uit het schip geschroefd heeft) gekregen heeft.`,
-          image: "assets/images/Category/Navigation Equipment/SBKZ-000017.jpg",
-        },
-        {
-          name: "Leitz Wetzlar Verrekijker – 7 x 50 (Doppelfernrohr mit Kasten)",
-          category: "Navigation Equipment",
-          description: `Deze Leitz Wetzlar verrekijker van het type 7 x 50 werd gebruikt aan boord van schepen van de Duitse Kriegsmarine. Beide oculairs zijn afzonderlijk scherp te stellen. De verrekijker draagt duidelijk gestempelde specificaties, waaronder het logo van de Duitse adelaar met lauwerkrans en swastika. Het geheel is compleet met het originele leren draagriempje, Benutzer-kapje en de bijbehorende leren opbergtas.
+                image: "assets/images/Category/Navigation Equipment/SBKZ-000017.jpg",
+            },
+            {
+                name: "Leitz Wetzlar Verrekijker – 7 x 50 (Doppelfernrohr mit Kasten)",
+                category: "Navigation Equipment",
+                description: `Deze Leitz Wetzlar verrekijker van het type 7 x 50 werd gebruikt aan boord van schepen van de Duitse Kriegsmarine. Beide oculairs zijn afzonderlijk scherp te stellen. De verrekijker draagt duidelijk gestempelde specificaties, waaronder het logo van de Duitse adelaar met lauwerkrans en swastika. Het geheel is compleet met het originele leren draagriempje, Benutzer-kapje en de bijbehorende leren opbergtas.
 
 * Vergroting: 7x
 * Objectieflensdiameter: 50 mm
@@ -1339,12 +1237,12 @@ Deze klok ik uit een Kriegsmarine schip geschroefd welke achter was gebleven in 
 * Toegewezen aan: N. North Sea – thuishaven Wilhelmshaven
 
 Deze verrekijker werd in 1944 door de heer K. (Kees) van de Tunne uit Yerseke meegenomen van een schip van de Kriegsmarine dat na de Bevrijding nog in de haven lag. Kees gebruikte de kijker vervolgens zijn hele werkzame leven als schipper op een vissersschip, dat thuishoorde in de haven van Yerseke.`,
-          image: "assets/images/Category/Navigation Equipment/SBKZ-000014a.jpg",
-        },
-        {
-          name: "Toegangspas dwangarbeider, M. van Liere",
-          category: "religious & personal items",
-          description: `Marinus van Liere (25-8-1924) wordt tijdens een opstootje in Goes opgepakt. Hij is dan 18 jaar. In april 1943 wordt hij op de trein gezet naar Leipzig om daar als dwangarbeider te werken in de ijzergieterij van Rudolf Sack.
+                image: "assets/images/Category/Navigation Equipment/SBKZ-000014a.jpg",
+            },
+            {
+                name: "Toegangspas dwangarbeider, M. van Liere",
+                category: "religious & personal items",
+                description: `Marinus van Liere (25-8-1924) wordt tijdens een opstootje in Goes opgepakt. Hij is dan 18 jaar. In april 1943 wordt hij op de trein gezet naar Leipzig om daar als dwangarbeider te werken in de ijzergieterij van Rudolf Sack.
 Bij Sack werkt dan al een aantal Zeeuwen in het kader van de Arbeitseinsatz. Het bedrijf is in 1854 ontstaan vanuit een eenvoudige dorpssmederij in Löben als producent van landbouwwerktuigen. Van 1870 gaat het bedrijf ook exporteren naar o.m. Rusland, de Balkan en Argentinië. Het bedrijf is toonaangevend in de fabricage van ploegen, later verbreedt men het aanbod tot eggen, grondboor- en zaaimachines e.d.
 Het werk in de fabriek is zwaar, een werkdag is maar liefst 12 uur lang met een pauze van drie kwartier. De dagdienst loopt van 6 uur in de ochtend tot 6 uur ’s avonds – de nachtdienst van ’s avonds 6 uur tot de andere ochtend 6 uur. Daarbij komt dan nog een half uur lopen van en naar het Lager waar men met veel andere dwangarbeiders is ondergebracht. Gelukkig is de zondag in principe vrij, al moet dan wel de barak opgeruimd en schoongemaakt worden. Vanaf 1944 worden de Sack-werknemers ook diverse keren ingezet om in Leipzig te helpen bij het puinruimen na een geallieerd bombardement.
 Aanvankelijk wordt er maar weinig oorlogsmaterieel gemaakt: men produceert voornamelijk allerhande landbouwmachines en minder dan 20% van de productie is voor het Duitse leger. Gedurende de oorlog neemt dat percentage echter zienderogen toe en eind 1944 wordt er vrijwel uitsluitend voor de oorlogsindustrie gewerkt.
@@ -1352,251 +1250,248 @@ Op 18 april 1945 komt de bevrijding: om 8.00 uur rijden de Amerikanen binnen en 
 De administratie van het bedrijf tijdens de tweede wereldoorlog is vrijwel volledig behouden. Het bevindt zich nu in het Staatsarchiv Sachsen in Leipzig en het is daar ook raadpleegbaar. In de administratie bevinden zich ook de personeelskaarten van veel Nederlandse dwangarbeiders en krijgsgevangenen.
  
 Tijdens zijn verblijf heeft Van Liere nauwgezet bijgehouden wat er is gebeurd: er is 217 keer alarm geweest en 19 keer daadwerkelijk gebombardeerd. De belevenissen van de Zeeuwse dwangarbeiders bij Rudolf Sack in Leipzig zijn beschreven in het boek GEDWONGEN VRIENDSCHAP.`,
-          image:
-            "assets/images/Category/Religious_Personal Items/BMZ-000013.jpg",
-        },
-        {
-          name: "Chanoekia, kaarsen standaard met negen armen",
-          category: "religious & personal items",
-          description: `Chanoekia met negen armen. De kandelaar staat op drie voeten in de vorm van geschubte dolfijnen. De stam eindigt bovenaan in een bol met daarop een davidster.`,
-          image:
-            "assets/images/Category/Religious_Personal Items/BMZ-000017.jpg",
-        },
-        {
-          name: "identiteitsplaatje",
-          category: "religious & personal items",
-          description: `Deze broche, een kenmerkend insigne van de Joodse Getto Ordedienst, is vervaardigd uit aluminium en heeft een zeskantige vorm. Op de voorzijde van de broche is een blauwe achtergrond zichtbaar, waartegen een veld met een blauwe Davidster is afgebeeld.
+                image:
+                    "assets/images/Category/Religious_Personal Items/BMZ-000013.jpg",
+            },
+            {
+                name: "Chanoekia, kaarsen standaard met negen armen",
+                category: "religious & personal items",
+                description: `Chanoekia met negen armen. De kandelaar staat op drie voeten in de vorm van geschubte dolfijnen. De stam eindigt bovenaan in een bol met daarop een davidster.`,
+                image:
+                    "assets/images/Category/Religious_Personal Items/BMZ-000017.jpg",
+            },
+            {
+                name: "identiteitsplaatje",
+                category: "religious & personal items",
+                description: `Deze broche, een kenmerkend insigne van de Joodse Getto Ordedienst, is vervaardigd uit aluminium en heeft een zeskantige vorm. Op de voorzijde van de broche is een blauwe achtergrond zichtbaar, waartegen een veld met een blauwe Davidster is afgebeeld.
 Rond de Davidster is het opschrift "J R W R Z W" geslagen, een codering die mogelijk verwijst naar een specifieke getto of eenheid binnen de ordedienst. Het rondom de rand van de broche aangebrachte rondschrift "ORDNUNGSDIENST STUZBA PORZADKOWA" duidt op de functie of afdeling binnen de getto-gemeenschap, namelijk de Ordedienst, die verantwoordelijk was voor het handhaven van orde en veiligheid.
 De broche symboliseert een complex en vaak pijnlijk aspect van het leven in de getto's tijdens de Tweede Wereldoorlog, waar Joodse gemeenschappen, onder extreem moeilijke omstandigheden, zelf de orde moesten handhaven.`,
-          image:
-            "assets/images/Category/Religious_Personal Items/BMZ-000019.jpg",
-        },
-        {
-          name: "Verbodsbord, voor Joden verboden",
-          category: "Miscellaneous",
-          description: `Dit object is een wit houten verbodsbord met de zwarte tekst "Voor Joden verboden", ondertekend door de procureur-generaal fungerend gewestelijk directeur van politie van Genechten. Aan de linkerkant van de tekst is een militair waarmerk zichtbaar.
+                image:
+                    "assets/images/Category/Religious_Personal Items/BMZ-000019.jpg",
+            },
+            {
+                name: "Verbodsbord, voor Joden verboden",
+                category: "Miscellaneous",
+                description: `Dit object is een wit houten verbodsbord met de zwarte tekst "Voor Joden verboden", ondertekend door de procureur-generaal fungerend gewestelijk directeur van politie van Genechten. Aan de linkerkant van de tekst is een militair waarmerk zichtbaar.
 
 Het bord heeft een specifieke historische context, aangezien het ooit aan de schuur van noodslager "Kleinepier" uit Grijpskerke hing. Door dit bord aan zijn gevel te bevestigen, wekten de Duitsers de indruk dat de slager Duitsgezind was, wat resulteerde in minder frequente controles. In werkelijkheid bood hij echter clandestiene hulp aan de lokale bevolking door het uitvoeren van illegale slachtingen.
 
 Na het overlijden van de heer Kleinepier werd zijn woning verkocht. In 2006 ontdekten de nieuwe bewoners dit bordje verborgen achter een dubbele wand tijdens het opknappen van de schuur. De huidige bewoners namen vervolgens contact op met zijn neef Jan Kleinepier uit Melliskerke, die het bordje aan ons museum heeft geschonken.
 
 Dit verbodsbord is niet alleen een voorbeeld van de anti-Joodse maatregelen tijdens de Tweede Wereldoorlog, maar ook een getuigenis van de verborgen vormen van verzet en overleving in bezet Nederland.`,
-          image: "assets/images/Category/Miscellaneous/SBKZ-000051b.jpg",
-        },
-      ];
+                image: "assets/images/Category/Miscellaneous/SBKZ-000051b.jpg",
+            },
+        ];
 
-      /* =====================  APP STATE  ===================== */
-      let currentView = "title"; // title | map | walcheren | gallery | story
-      let storySlideIndex = 0;
-      let galleryCategory = "All"; // filter within gallery
 
-      /* =====================  VIEW HELPERS  ===================== */
-      function switchView(targetId) {
-        // hide every major section
-        [
-          "titlePage",
-          "mapView",
-          "walcherenView",
-          "artifactGallery",
-          "storyMode",
-        ].forEach((id) => document.getElementById(id).classList.add("hidden"));
-        // show target
-        document.getElementById(targetId).classList.remove("hidden");
-      }
-
-      /* --------------  MENU  -------------- */
-      function toggleMenu() {
-        document.getElementById("sideMenu").classList.toggle("open");
-      }
-      document.addEventListener("click", (e) => {
-        const menu = document.getElementById("sideMenu");
-        const btn = document.getElementById("menuToggle");
-        if (!menu.contains(e.target) && !btn.contains(e.target))
-          menu.classList.remove("open");
-      });
-
-      /* === minimal demo data === */
-
-      function showArtifactGallery() {
-        buildGalleryFilters();
-        renderArtifactGrid();
-        switchView("artifactGallery");
-      }
-      function backToMap() {
-        switchView("mapView");
-      }
-      function switchView(id) {
-        [
-          "titlePage",
-          "mapView",
-          "walcherenView",
-          "artifactGallery",
-          "storyMode",
-        ].forEach((s) => document.getElementById(s)?.classList.add("hidden"));
-        document.getElementById(id)?.classList.remove("hidden");
-      }
-
-      function buildGalleryFilters() {
-        const cont = document.getElementById("galleryFilters");
-        cont.innerHTML = "";
-        const cats = new Set(
-          Object.values(artifacts)
-            .flat()
-            .map((a) => a.category)
-        );
-        ["All", ...cats].forEach((c) => {
-          const b = document.createElement("button");
-          b.className = c === galleryCategory ? "btn" : "btn-secondary";
-          b.textContent = c;
-          b.onclick = () => {
-            galleryCategory = c;
-            renderArtifactGrid();
-            buildGalleryFilters();
-          };
-          cont.appendChild(b);
-        });
-      }
-
-      /* === modal === */
-      function openModal(a) {
-        document.getElementById("modalImg").src = a.image;
-        document.getElementById("modalImg").alt = a.name;
-        document.getElementById("modalTitle").textContent = a.name;
-        document.getElementById("modalDesc").textContent = a.description;
-        document.getElementById("artifactModal").classList.remove("hidden");
-      }
-      function closeModal(e) {
-        if (
-          e.target.classList.contains("modal") ||
-          e.target.classList.contains("modal-close")
-        ) {
-          document.getElementById("artifactModal").classList.add("hidden");
+        /* =====================  VIEW HELPERS  ===================== */
+        function switchView(targetId) {
+            // hide every major section
+            [
+                "titlePage",
+                "mapView",
+                "walcherenView",
+                "artifactGallery",
+                "storyMode",
+            ].forEach((id) => document.getElementById(id).classList.add("hidden"));
+            // show target
+            document.getElementById(targetId).classList.remove("hidden");
         }
-      }
 
-      /* --------------  TITLE / MAP NAVIGATION  -------------- */
-      function startExperience() {
-        switchView("mapView");
-        currentView = "map";
-      }
-      function zoomToWalcheren() {
-        switchView("walcherenView");
-        currentView = "walcheren";
-      }
-      function backToMain() {
-        switchView("mapView");
-        currentView = "map";
-      }
-      function backToMap() {
-        // generic back from gallery to map view
-        switchView("mapView");
-        currentView = "map";
-      }
+        /* --------------  MENU  -------------- */
+        function toggleMenu() {
+            document.getElementById("sideMenu").classList.toggle("open");
+        }
+        document.addEventListener("click", (e) => {
+            const menu = document.getElementById("sideMenu");
+            const btn = document.getElementById("menuToggle");
+            if (!menu.contains(e.target) && !btn.contains(e.target))
+                menu.classList.remove("open");
+        });
 
-      /* --------------  STORY MODE  -------------- */
-      function startStory() {
-        switchView("storyMode");
-        storySlideIndex = 0;
-        showStorySlide();
-        currentView = "story";
-      }
-      function showStorySlide() {
-        const slide = storySlides[storySlideIndex];
-        document.getElementById("storyContent").innerHTML = `
+        /* === minimal demo data === */
+
+        function showArtifactGallery() {
+            buildGalleryFilters();
+            renderArtifactGrid();
+            switchView("artifactGallery");
+        }
+        function backToMap() {
+            switchView("mapView");
+        }
+        function switchView(id) {
+            [
+                "titlePage",
+                "mapView",
+                "walcherenView",
+                "artifactGallery",
+                "storyMode",
+            ].forEach((s) => document.getElementById(s)?.classList.add("hidden"));
+            document.getElementById(id)?.classList.remove("hidden");
+        }
+
+        function buildGalleryFilters() {
+            const cont = document.getElementById("galleryFilters");
+            cont.innerHTML = "";
+            const cats = new Set(
+                Object.values(artifacts)
+                    .flat()
+                    .map((a) => a.category)
+            );
+            ["All", ...cats].forEach((c) => {
+                const b = document.createElement("button");
+                b.className = c === galleryCategory ? "btn" : "btn-secondary";
+                b.textContent = c;
+                b.onclick = () => {
+                    galleryCategory = c;
+                    renderArtifactGrid();
+                    buildGalleryFilters();
+                };
+                cont.appendChild(b);
+            });
+        }
+
+        /* === modal === */
+        function openModal(a) {
+            document.getElementById("modalImg").src = a.image;
+            document.getElementById("modalImg").alt = a.name;
+            document.getElementById("modalTitle").textContent = a.name;
+            document.getElementById("modalDesc").textContent = a.description;
+            document.getElementById("artifactModal").classList.remove("hidden");
+        }
+        function closeModal(e) {
+            if (
+                e.target.classList.contains("modal") ||
+                e.target.classList.contains("modal-close")
+            ) {
+                document.getElementById("artifactModal").classList.add("hidden");
+            }
+        }
+
+        /* --------------  TITLE / MAP NAVIGATION  -------------- */
+        function startExperience() {
+            switchView("mapView");
+            currentView = "map";
+        }
+        function zoomToWalcheren() {
+            switchView("walcherenView");
+            currentView = "walcheren";
+        }
+        function backToMain() {
+            switchView("mapView");
+            currentView = "map";
+        }
+        function backToMap() {
+            // generic back from gallery to map view
+            switchView("mapView");
+            currentView = "map";
+        }
+
+        /* --------------  STORY MODE  -------------- */
+        function startStory() {
+            switchView("storyMode");
+            storySlideIndex = 0;
+            showStorySlide();
+            currentView = "story";
+        }
+        function showStorySlide() {
+            const slide = storySlides[storySlideIndex];
+            document.getElementById("storyContent").innerHTML = `
                       <img src="${slide.image}" alt="${slide.title}" style="max-width:100%; height:300px; object-fit:cover; margin-bottom:24px; border-radius:8px;" />
                       <h2 style="font-size:2rem; margin-bottom:16px;">${slide.title}</h2>
                       <p style="font-size:1.25rem; line-height:1.75;">${slide.content}</p>
                   `;
-      }
-      function nextStorySlide() {
-        storySlideIndex++;
-        if (storySlideIndex >= storySlides.length) {
-          exitStory();
-        } else {
-          showStorySlide();
         }
-      }
-      function exitStory() {
-        switchView("mapView");
-        currentView = "map";
-      }
-
-      /* --------------  ARTIFACT GALLERY  -------------- */
-      function showArtifactGallery() {
-        buildGalleryFilters();
-        renderArtifactGrid();
-        switchView("artifactGallery");
-        currentView = "gallery";
-      }
-
-      function buildGalleryFilters() {
-        const allArtifacts = Object.values(artifacts).flat();
-        const categorySet = new Set(allArtifacts.map((a) => a.category));
-        const filterContainer = document.getElementById("galleryFilters");
-        filterContainer.innerHTML = "";
-        // "All" button first
-        filterContainer.appendChild(createFilterBtn("All"));
-        // alphabetical order for the rest
-        [...categorySet]
-          .sort()
-          .forEach((cat) => filterContainer.appendChild(createFilterBtn(cat)));
-      }
-      function createFilterBtn(label) {
-        const btn = document.createElement("button");
-        btn.className = label === galleryCategory ? "btn" : "btn-secondary";
-        btn.textContent = label;
-        btn.onclick = () => {
-          galleryCategory = label;
-          showArtifactGallery(); // re-render with new filter
-        };
-        return btn;
-      }
-
-      function openModal(art) {
-        const m = document.getElementById("artifactModal");
-        document.getElementById("modalImg").src = art.image;
-        document.getElementById("modalImg").alt = art.name;
-        document.getElementById("modalTitle").textContent = art.name;
-        document.getElementById("modalDesc").textContent = art.description;
-        m.classList.remove("hidden");
-      }
-
-      function closeModal(e) {
-        if (
-          e.target.classList.contains("modal") ||
-          e.target.classList.contains("modal-close")
-        ) {
-          document.getElementById("artifactModal").classList.add("hidden");
+        function nextStorySlide() {
+            storySlideIndex++;
+            if (storySlideIndex >= storySlides.length) {
+                exitStory();
+            } else {
+                showStorySlide();
+            }
         }
-      }
+        function exitStory() {
+            switchView("mapView");
+            currentView = "map";
+        }
 
-      function renderArtifactGrid() {
-        const grid = document.getElementById("artifactGrid");
-        grid.innerHTML = "";
-        const filtered =
-          galleryCategory === "All"
-            ? artifacts
-            : artifacts.filter((a) => a.category === galleryCategory);
+        /* --------------  ARTIFACT GALLERY  -------------- */
+        function showArtifactGallery() {
+            buildGalleryFilters();
+            renderArtifactGrid();
+            switchView("artifactGallery");
+            currentView = "gallery";
+        }
 
-        filtered.forEach((art) => {
-          const card = document.createElement("div");
-          card.className = "artifact-card";
-          const shortTitle = art.name;
-          card.innerHTML = `
+        function buildGalleryFilters() {
+            const allArtifacts = Object.values(artifacts).flat();
+            const categorySet = new Set(allArtifacts.map((a) => a.category));
+            const filterContainer = document.getElementById("galleryFilters");
+            filterContainer.innerHTML = "";
+            // "All" button first
+            filterContainer.appendChild(createFilterBtn("All"));
+            // alphabetical order for the rest
+            [...categorySet]
+                .sort()
+                .forEach((cat) => filterContainer.appendChild(createFilterBtn(cat)));
+        }
+        function createFilterBtn(label) {
+            const btn = document.createElement("button");
+            btn.className = label === galleryCategory ? "btn" : "btn-secondary";
+            btn.textContent = label;
+            btn.onclick = () => {
+                galleryCategory = label;
+                showArtifactGallery(); // re-render with new filter
+            };
+            return btn;
+        }
+
+        function openModal(art) {
+            const m = document.getElementById("artifactModal");
+            document.getElementById("modalImg").src = art.image;
+            document.getElementById("modalImg").alt = art.name;
+            document.getElementById("modalTitle").textContent = art.name;
+            document.getElementById("modalDesc").textContent = art.description;
+            m.classList.remove("hidden");
+        }
+
+        function closeModal(e) {
+            if (
+                e.target.classList.contains("modal") ||
+                e.target.classList.contains("modal-close")
+            ) {
+                document.getElementById("artifactModal").classList.add("hidden");
+            }
+        }
+
+        function renderArtifactGrid() {
+            const grid = document.getElementById("artifactGrid");
+            grid.innerHTML = "";
+            const filtered =
+                galleryCategory === "All"
+                    ? artifacts
+                    : artifacts.filter((a) => a.category === galleryCategory);
+
+            filtered.forEach((art) => {
+                const card = document.createElement("div");
+                card.className = "artifact-card";
+                const shortTitle = art.name;
+                card.innerHTML = `
       <img src="${art.image}" alt="${art.name}" />
       <div class="artifact-overlay">
         <h4>${shortTitle}</h4>
       </div>
     `;
-          card.onclick = () => openModal(art);
-          grid.appendChild(card);
-        });
-      }
+                card.onclick = () => openModal(art);
+                grid.appendChild(card);
+            });
+        }
 
-      /* --------------  INIT  -------------- */
-      document.addEventListener("DOMContentLoaded", () => {
-        console.log("Battle of the Scheldt Interactive Map – loaded");
-      });
+        /* --------------  INIT  -------------- */
+        document.addEventListener("DOMContentLoaded", () => {
+            console.log("Battle of the Scheldt Interactive Map – loaded");
+        });
     </script>
-  </body>
+</body>
+
 </html>
