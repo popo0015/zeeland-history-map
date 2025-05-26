@@ -1,6 +1,9 @@
 {
   "dependencies": {
-    "@tailwindcss/vite": "^4.1.7"
+    "@tailwindcss/vite": "^4.1.7",
+    "leaflet": "^1.9.4",
+    "leaflet-ant-path": "^1.3.0",
+    "leaflet-polylinedecorator": "^1.6.0"
   },
   "name": "zeeland-history-map",
   "version": "1.0.0",
