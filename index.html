@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle of the Scheldt - Interactive Historical Map</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Crimson Text', serif;
+            background: linear-gradient(135deg, #f4f1e8 0%, #e8e2d4 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .title-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: url("/assets/images/Vlissingen/35530.jpg");
+            background-size: cover;
+        }
+
+        .title-content {
+            text-align: center;
+            background: white;
+            padding: 60px;
+            border: 3px solid #8b7355;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-width: 800px;
+        }
+
+        .title-content h1 {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #92400e;
+            margin-bottom: 24px;
+        }
+
+        .title-content h2 {
+            font-size: 1.5rem;
+            color: #b45309;
+            margin-bottom: 32px;
+        }
+
+        .title-content p {
+            font-size: 1.125rem;
+            color: #a16207;
+            margin-bottom: 32px;
+            line-height: 1.75;
+        }
+
+        .btn {
+            background: #a16207;
+            color: white;
+            padding: 16px 32px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            background: #92400e;
+        }
+
+        .btn-secondary {
+            background: #d97706;
+            margin-right: 16px;
+        }
+
+        .btn-secondary:hover {
+            background: #b45309;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .map-view {
+            min-height: 100vh;
+            padding: 32px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #92400e;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #b45309;
+            font-size: 1.125rem;
+        }
+
+        .controls {
+            margin-top: 16px;
+        }
+
+        .map-container {
+            background: white;
+            border: 3px solid #8b7355;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            position: relative;
+        }
+
+        .map-region {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .map-region:hover {
+            filter: brightness(1.1);
+            transform: scale(1.02);
+        }
+
+        .story-mode {
+            min-height: 100vh;
+            background: black;
+            color: white;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .story-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .story-slide {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease;
+        }
+
+        .story-slide.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .story-slide img {
+            max-width: 100%;
+            height: 300px;
+            object-fit: cover;
+            margin: 0 auto 24px;
+            filter: sepia(0.8) contrast(1.2) brightness(0.9);
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .story-slide h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        .story-slide p {
+            font-size: 1.25rem;
+            line-height: 1.75;
+        }
+
+        .story-controls {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .exit-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #dc2626;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .exit-btn:hover {
+            background: #b91c1c;
+        }
+
+        .artifact-sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            height: 100vh;
+            width: 384px;
+            background: white;
+            box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s;
+            z-index: 50;
+            overflow-y: auto;
+        }
+
+        .artifact-sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #92400e;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #d97706;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: #a16207;
+        }
+
+        .artifact-item {
+            border: 1px solid #fde68a;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .artifact-item img {
+            width: 100%;
+            height: 96px;
+            object-fit: cover;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+
+        .artifact-item h4 {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 4px;
+        }
+
+        .artifact-category {
+            font-size: 0.875rem;
+            color: #d97706;
+            margin-bottom: 8px;
+        }
+
+        .artifact-description {
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .artifact-marker {
+            animation: pulse 2s infinite;
+            cursor: pointer;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        .troop-path {
+            stroke-dasharray: 5, 5;
+            animation: march 3s linear infinite;
+        }
+
+        @keyframes march {
+            0% {
+                stroke-dashoffset: 0;
+            }
+
+            100% {
+                stroke-dashoffset: 20;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .title-content {
+                padding: 40px 20px;
+            }
+
+            .title-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .artifact-sidebar {
+                width: 100%;
+            }
+
+            .map-view {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Title Page -->
+    <div id="titlePage" class="title-page">
+        <div class="title-content">
+            <h1>The Battle of the Scheldt</h1>
+            <h2>October - November 1944</h2>
+            <p>
+                Explore the liberation of Zeeland through an interactive journey of courage, strategy, and sacrifice.
+                Follow the Allied forces as they fought to open the vital port of Antwerp.
+            </p>
+            <button onclick="startExperience()" class="btn">
+                Begin Historical Journey
+            </button>
+            <button onclick="startStory()" class="btn btn-secondary">
+                Start Story Mode
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Map View -->
+    <div id="mapView" class="map-view hidden">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <h1>Zeeland - Battle of the Scheldt</h1>
+                <p>October - November 1944</p>
+                <div class="controls">
+                    <button onclick="startStory()" class="btn btn-secondary">
+                        Start Story Mode
+                    </button>
+                    <button onclick="toggleArtifacts()" class="btn">
+                        Toggle Artifacts
+                    </button>
+                </div>
+            </div>
+
+            <!-- Map Container -->
+            <div class="map-container">
+                <svg id="zelandMap" viewBox="0 0 800 600" style="width: 100%; height: auto;">
+                    <!-- Zeeland Outline -->
+                    <path d="M100 200 L300 180 L500 200 L650 250 L700 350 L650 450 L500 480 L300 460 L100 400 Z"
+                        fill="#e8dcc0" stroke="#8b7355" stroke-width="2" />
+
+                    <!-- Walcheren Island -->
+                    <g id="walcheren" class="map-region" onclick="zoomToWalcheren()">
+                        <circle cx="200" cy="300" r="60" fill="#d4c4a0" stroke="#8b7355" stroke-width="2" />
+                        <text x="200" y="305" text-anchor="middle"
+                            style="font-size: 14px; font-weight: 600; fill: #92400e;">Walcheren</text>
+                    </g>
+
+                    <!-- South Beveland -->
+                    <g id="southBeveland" class="map-region">
+                        <ellipse cx="350" cy="280" rx="80" ry="40" fill="#d4c4a0" stroke="#8b7355" stroke-width="2" />
+                        <text x="350" y="285" text-anchor="middle"
+                            style="font-size: 14px; font-weight: 600; fill: #92400e;">South Beveland</text>
+                    </g>
+
+                    <!-- Tholen -->
+                    <g id="tholen" class="map-region">
+                        <circle cx="500" cy="320" r="40" fill="#d4c4a0" stroke="#8b7355" stroke-width="2" />
+                        <text x="500" y="325" text-anchor="middle"
+                            style="font-size: 14px; font-weight: 600; fill: #92400e;">Tholen</text>
+                    </g>
+
+                    <!-- Schouwen-Duiveland -->
+                    <g id="schouwen" class="map-region">
+                        <ellipse cx="550" cy="400" rx="70" ry="35" fill="#d4c4a0" stroke="#8b7355" stroke-width="2" />
+                        <text x="550" y="405" text-anchor="middle"
+                            style="font-size: 14px; font-weight: 600; fill: #92400e;">Schouwen-Duiveland</text>
+                    </g>
+
+                    <!-- Troop Movement Paths -->
+                    <g id="troopPaths" class="hidden">
+                        <path d="M350 280 L200 300" stroke="#8b4513" stroke-width="3" class="troop-path" fill="none" />
+                        <path d="M200 300 L180 280" stroke="#8b4513" stroke-width="3" class="troop-path" fill="none" />
+                        <path d="M200 300 L220 280" stroke="#8b4513" stroke-width="3" class="troop-path" fill="none" />
+                        <path d="M200 300 L180 320" stroke="#8b4513" stroke-width="3" class="troop-path" fill="none" />
+                        <path d="M500 320 L550 400" stroke="#8b4513" stroke-width="3" class="troop-path" fill="none" />
+                    </g>
+
+                    <!-- Artifact Markers -->
+                    <g id="artifactMarkers" class="hidden">
+                        <circle cx="200" cy="300" r="8" fill="#ff6b35" class="artifact-marker"
+                            onclick="showArtifacts('walcheren')" />
+                        <circle cx="350" cy="280" r="8" fill="#ff6b35" class="artifact-marker"
+                            onclick="showArtifacts('beveland')" />
+                        <circle cx="500" cy="320" r="8" fill="#ff6b35" class="artifact-marker"
+                            onclick="showArtifacts('tholen')" />
+                        <circle cx="550" cy="400" r="8" fill="#ff6b35" class="artifact-marker"
+                            onclick="showArtifacts('schouwen')" />
+                    </g>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Walcheren View -->
+    <div id="walcherenView" class="map-view hidden">
+        <div class="container">
+            <div class="header">
+                <h1>Walcheren Island</h1>
+                <p>The Final Assault - November 1944</p>
+                <button onclick="backToMain()" class="btn">
+                    ← Back to Zeeland
+                </button>
+            </div>
+
+            <div class="map-container">
+                <svg viewBox="0 0 600 400" style="width: 100%; height: auto;">
+                    <!-- Walcheren Island Detail -->
+                    <circle cx="300" cy="200" r="150" fill="#e8dcc0" stroke="#8b7355" stroke-width="3" />
+
+                    <!-- Cities -->
+                    <g id="middelburg">
+                        <circle cx="300" cy="200" r="8" fill="#8b4513" />
+                        <text x="300" y="190" text-anchor="middle"
+                            style="font-size: 14px; font-weight: 600; fill: #92400e;">Middelburg</text>
+                    </g>
+
+                    <g id="vlissingen">
+                        <circle cx="250" cy="250" r="8" fill="#8b4513" />
+                        <text x="250" y="270" text-anchor="middle"
+                            style="font-size: 14px; font-weight: 600; fill: #92400e;">Vlissingen</text>
+                    </g>
+
+                    <g id="westkapelle">
+                        <circle cx="200" cy="180" r="8" fill="#8b4513" />
+                        <text x="200" y="170" text-anchor="middle"
+                            style="font-size: 14px; font-weight: 600; fill: #92400e;">Westkapelle</text>
+                    </g>
+
+                    <g id="oostkapelle">
+                        <circle cx="250" cy="150" r="6" fill="#654321" />
+                        <text x="250" y="140" text-anchor="middle"
+                            style="font-size: 12px; fill: #a16207;">Oostkapelle</text>
+                    </g>
+
+                    <g id="domburg">
+                        <circle cx="220" cy="130" r="6" fill="#654321" />
+                        <text x="220" y="120" text-anchor="middle"
+                            style="font-size: 12px; fill: #a16207;">Domburg</text>
+                    </g>
+
+                    <!-- Detailed Troop Paths -->
+                    <path d="M350 200 L300 200" stroke="#8b4513" stroke-width="2" class="troop-path" fill="none" />
+                    <path d="M300 200 L250 150" stroke="#8b4513" stroke-width="2" class="troop-path" fill="none" />
+                    <path d="M250 150 L220 130" stroke="#8b4513" stroke-width="2" class="troop-path" fill="none" />
+                    <path d="M220 130 L200 180" stroke="#8b4513" stroke-width="2" class="troop-path" fill="none" />
+                    <path d="M300 200 L250 250" stroke="#8b4513" stroke-width="2" class="troop-path" fill="none" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Story Mode -->
+    <div id="storyMode" class="story-mode hidden">
+        <button onclick="exitStory()" class="exit-btn">
+            Exit Story
+        </button>
+
+        <div id="storyContent" class="story-content">
+            <!-- Story slides will be populated by JavaScript -->
+        </div>
+
+        <div class="story-controls">
+            <button onclick="nextStorySlide()" class="btn">
+                Next →
+            </button>
+        </div>
+    </div>
+
+    <!-- Artifact Sidebar -->
+    <div id="artifactSidebar" class="artifact-sidebar">
+        <div class="sidebar-header">
+            <h2>Artifacts</h2>
+            <button onclick="closeArtifacts()" class="close-btn">×</button>
+        </div>
+        <div id="artifactContent" style="padding: 0 24px 24px;">
+            <!-- Artifact content will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        let currentView = 'title';
+        let storySlideIndex = 0;
+        let artifactsVisible = false;
+
+        // Story Data
+        // check with middelburg, vlissingen, westkapelle -> match fact with historical:)
+        const storySlides = [
+            {
+                title: "October 1944 - The Strategic Importance",
+                content: "The port of Antwerp was crucial for Allied supply lines. However, the Scheldt estuary remained under German control, making the port unusable.",
+                image: "/assets/images/Middelburg/6861.jpg"
+            },
+            {
+                title: "The German Fortress",
+                content: "German forces had heavily fortified Walcheren Island and the surrounding areas, creating a formidable defensive network.",
+                image: "/assets/images/Middelburg/67111.jpg"
+            },
+            {
+                title: "South Beveland Assault",
+                content: "Allied forces began their assault on South Beveland, fighting through flooded polders and determined German resistance.",
+                image: "/assets/images/Middelburg/FO066408.jpg"
+            },
+            {
+                title: "The Crossing to Walcheren",
+                content: "November 1st, 1944 - Allied forces launched amphibious assaults on Walcheren Island from multiple directions.",
+                image: "/assets/images/Vlissingen/35483.jpg"
+            },
+            {
+                title: "Liberation of Middelburg",
+                content: "After fierce fighting, Middelburg was liberated, marking a crucial victory in the battle for Zeeland.",
+                image: "/assets/images/Vlissingen/35530.jpg"
+            },
+            {
+                title: "Victory and Liberation",
+                content: "By November 8th, 1944, Zeeland was liberated, opening the vital supply route through Antwerp.",
+                image: "/assets/images/Vlissingen/35531.jpg"
+            }
+        ];
+
+        // Artifact Data
+        const artifacts = {
+            walcheren: [
+                {
+                    name: "German Helmet",
+                    category: "Equipment",
+                    description: "Steel helmet found near Westkapelle bunkers",
+                    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100&h=100&fit=crop&auto=format"
+                },
+                {
+                    name: "Allied Rifle",
+                    category: "Weapons",
+                    description: "Lee-Enfield rifle used by Canadian forces",
+                    image: "https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=100&h=100&fit=crop&auto=format"
+                },
+                {
+                    name: "Military Map",
+                    category: "Documents",
+                    description: "Tactical map showing German positions",
+                    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100&h=100&fit=crop&auto=format"
+                }
+            ],
+            beveland: [
+                {
+                    name: "Artillery Shell",
+                    category: "Weapons",
+                    description: "Unexploded shell from the South Beveland assault",
+                    image: "https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=100&h=100&fit=crop&auto=format"
+                },
+                {
+                    name: "Soldier's Dog Tag",
+                    category: "Personal",
+                    description: "Identification tag of a fallen soldier",
+                    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100&h=100&fit=crop&auto=format"
+                }
+            ],
+            tholen: [
+                {
+                    name: "German Binoculars",
+                    category: "Equipment",
+                    description: "Zeiss binoculars used for reconnaissance",
+                    image: "https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=100&h=100&fit=crop&auto=format"
+                },
+                {
+                    name: "Ration Tin",
+                    category: "Personal",
+                    description: "Emergency rations carried by troops",
+                    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100&h=100&fit=crop&auto=format"
+                }
+            ],
+            schouwen: [
+                {
+                    name: "Radio Equipment",
+                    category: "Equipment",
+                    description: "German communication device",
+                    image: "https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=100&h=100&fit=crop&auto=format"
+                },
+                {
+                    name: "Propaganda Leaflet",
+                    category: "Documents",
+                    description: "Allied leaflet dropped over German positions",
+                    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100&h=100&fit=crop&auto=format"
+                }
+            ]
+        };
+
+        // Navigation Functions
+        function startExperience() {
+            document.getElementById('titlePage').classList.add('hidden');
+            document.getElementById('mapView').classList.remove('hidden');
+            currentView = 'map';
+        }
+
+        function zoomToWalcheren() {
+            document.getElementById('mapView').classList.add('hidden');
+            document.getElementById('walcherenView').classList.remove('hidden');
+            currentView = 'walcheren';
+        }
+
+        function backToMain() {
+            document.getElementById('walcherenView').classList.add('hidden');
+            document.getElementById('mapView').classList.remove('hidden');
+            currentView = 'map';
+        }
+
+        // Story Mode Functions
+        function startStory() {
+            document.getElementById('titlePage').classList.add('hidden');
+            document.getElementById('mapView').classList.add('hidden');
+            document.getElementById('storyMode').classList.remove('hidden');
+            storySlideIndex = 0;
+            showStorySlide();
+        }
+
+        function showStorySlide() {
+            const slide = storySlides[storySlideIndex];
+            const content = document.getElementById('storyContent');
+
+            content.innerHTML = `
+                <div class="story-slide active">
+                    <img src="${slide.image}" alt="${slide.title}">
+                    <h2>${slide.title}</h2>
+                    <p>${slide.content}</p>
+                </div>
+            `;
+        }
+
+        function nextStorySlide() {
+            storySlideIndex++;
+            if (storySlideIndex >= storySlides.length) {
+                exitStory();
+                return;
+            }
+            showStorySlide();
+        }
+
+        function exitStory() {
+            document.getElementById('storyMode').classList.add('hidden');
+            document.getElementById('mapView').classList.remove('hidden');
+            storySlideIndex = 0;
+        }
+
+        // Artifact Functions
+        function toggleArtifacts() {
+            artifactsVisible = !artifactsVisible;
+            const markers = document.getElementById('artifactMarkers');
+            const paths = document.getElementById('troopPaths');
+
+            if (artifactsVisible) {
+                markers.classList.remove('hidden');
+                paths.classList.remove('hidden');
+            } else {
+                markers.classList.add('hidden');
+                paths.classList.add('hidden');
+            }
+        }
+
+        function showArtifacts(region) {
+            const sidebar = document.getElementById('artifactSidebar');
+            const content = document.getElementById('artifactContent');
+
+            const regionArtifacts = artifacts[region] || [];
+
+            content.innerHTML = `
+                <h3 style="font-size: 1.25rem; font-weight: 600; color: #92400e; margin-bottom: 16px; text-transform: capitalize;">${region} Artifacts</h3>
+                <div>
+                    ${regionArtifacts.map(artifact => `
+                        <div class="artifact-item">
+                            <img src="${artifact.image}" alt="${artifact.name}">
+                            <h4>${artifact.name}</h4>
+                            <p class="artifact-category">${artifact.category}</p>
+                            <p class="artifact-description">${artifact.description}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            sidebar.classList.add('open');
+        }
+
+        function closeArtifacts() {
+            document.getElementById('artifactSidebar').classList.remove('open');
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Battle of the Scheldt Interactive Map Loaded');
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.7"
+  },
+  "name": "zeeland-history-map",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.7"
+  },
+  "scripts": {
+    "dev": "npx tailwindcss -i ./input.css -o ./styles.css --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
