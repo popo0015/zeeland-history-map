@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Battle of the Scheldt - Interactive Historical Map</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
 
@@ -98,6 +102,23 @@
             padding: 32px;
         }
 
+        #mapView {
+            width: 100%;
+            height: 100vh;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: #92400e;
+            filter: grayscale(0.8) contrast(1.4);
+        }
+
+        .leaflet-container {
+            z-index: 0;
+        }
+
         .header {
             text-align: center;
             margin-bottom: 32px;
@@ -120,6 +141,7 @@
         }
 
         .map-container {
+            height: 80vh;
             background: white;
             border: 3px solid #8b7355;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -364,7 +386,6 @@
             <!-- Header -->
             <div class="header">
                 <h1>Zeeland - Battle of the Scheldt</h1>
-                <p>October - November 1944</p>
                 <div class="controls">
                     <button onclick="startStory()" class="btn btn-secondary">
                         Start Story Mode
@@ -377,118 +398,10 @@
 
             <!-- Map Container -->
             <div class="map-container">
-                <svg id="zelandMap" viewBox="0 0 800 600" style="width: 100%; height: auto;">
-                    <!-- Zeeland Outline -->
-                    <path d="M100 200 L300 180 L500 200 L650 250 L700 350 L650 450 L500 480 L300 460 L100 400 Z"
-                        fill="#e8dcc0" stroke="#8b7355" stroke-width="2" />
+                <div id="map"></div>
 
-                    <!-- Walcheren Island -->
-                    <g id="walcheren" class="map-region" onclick="zoomToWalcheren()">
-                        <circle cx="200" cy="300" r="60" fill="#d4c4a0" stroke="#8b7355" stroke-width="2" />
-                        <text x="200" y="305" text-anchor="middle"
-                            style="font-size: 14px; font-weight: 600; fill: #92400e;">Walcheren</text>
-                    </g>
-
-                    <!-- South Beveland -->
-                    <g id="southBeveland" class="map-region">
-                        <ellipse cx="350" cy="280" rx="80" ry="40" fill="#d4c4a0" stroke="#8b7355" stroke-width="2" />
-                        <text x="350" y="285" text-anchor="middle"
-                            style="font-size: 14px; font-weight: 600; fill: #92400e;">South Beveland</text>
-                    </g>
-
-                    <!-- Tholen -->
-                    <g id="tholen" class="map-region">
-                        <circle cx="500" cy="320" r="40" fill="#d4c4a0" stroke="#8b7355" stroke-width="2" />
-                        <text x="500" y="325" text-anchor="middle"
-                            style="font-size: 14px; font-weight: 600; fill: #92400e;">Tholen</text>
-                    </g>
-
-                    <!-- Schouwen-Duiveland -->
-                    <g id="schouwen" class="map-region">
-                        <ellipse cx="550" cy="400" rx="70" ry="35" fill="#d4c4a0" stroke="#8b7355" stroke-width="2" />
-                        <text x="550" y="405" text-anchor="middle"
-                            style="font-size: 14px; font-weight: 600; fill: #92400e;">Schouwen-Duiveland</text>
-                    </g>
-
-                    <!-- Troop Movement Paths -->
-                    <g id="troopPaths" class="hidden">
-                        <path d="M350 280 L200 300" stroke="#8b4513" stroke-width="3" class="troop-path" fill="none" />
-                        <path d="M200 300 L180 280" stroke="#8b4513" stroke-width="3" class="troop-path" fill="none" />
-                        <path d="M200 300 L220 280" stroke="#8b4513" stroke-width="3" class="troop-path" fill="none" />
-                        <path d="M200 300 L180 320" stroke="#8b4513" stroke-width="3" class="troop-path" fill="none" />
-                        <path d="M500 320 L550 400" stroke="#8b4513" stroke-width="3" class="troop-path" fill="none" />
-                    </g>
-
-                    <!-- Artifact Markers -->
-                    <g id="artifactMarkers" class="hidden">
-                        <circle cx="200" cy="300" r="8" fill="#ff6b35" class="artifact-marker"
-                            onclick="showArtifacts('walcheren')" />
-                        <circle cx="350" cy="280" r="8" fill="#ff6b35" class="artifact-marker"
-                            onclick="showArtifacts('beveland')" />
-                        <circle cx="500" cy="320" r="8" fill="#ff6b35" class="artifact-marker"
-                            onclick="showArtifacts('tholen')" />
-                        <circle cx="550" cy="400" r="8" fill="#ff6b35" class="artifact-marker"
-                            onclick="showArtifacts('schouwen')" />
-                    </g>
-                </svg>
-            </div>
-        </div>
-    </div>
-
-    <!-- Detailed Walcheren View -->
-    <div id="walcherenView" class="map-view hidden">
-        <div class="container">
-            <div class="header">
-                <h1>Walcheren Island</h1>
-                <p>The Final Assault - November 1944</p>
-                <button onclick="backToMain()" class="btn">
-                    ← Back to Zeeland
-                </button>
-            </div>
-
-            <div class="map-container">
-                <svg viewBox="0 0 600 400" style="width: 100%; height: auto;">
-                    <!-- Walcheren Island Detail -->
-                    <circle cx="300" cy="200" r="150" fill="#e8dcc0" stroke="#8b7355" stroke-width="3" />
-
-                    <!-- Cities -->
-                    <g id="middelburg">
-                        <circle cx="300" cy="200" r="8" fill="#8b4513" />
-                        <text x="300" y="190" text-anchor="middle"
-                            style="font-size: 14px; font-weight: 600; fill: #92400e;">Middelburg</text>
-                    </g>
-
-                    <g id="vlissingen">
-                        <circle cx="250" cy="250" r="8" fill="#8b4513" />
-                        <text x="250" y="270" text-anchor="middle"
-                            style="font-size: 14px; font-weight: 600; fill: #92400e;">Vlissingen</text>
-                    </g>
-
-                    <g id="westkapelle">
-                        <circle cx="200" cy="180" r="8" fill="#8b4513" />
-                        <text x="200" y="170" text-anchor="middle"
-                            style="font-size: 14px; font-weight: 600; fill: #92400e;">Westkapelle</text>
-                    </g>
-
-                    <g id="oostkapelle">
-                        <circle cx="250" cy="150" r="6" fill="#654321" />
-                        <text x="250" y="140" text-anchor="middle"
-                            style="font-size: 12px; fill: #a16207;">Oostkapelle</text>
-                    </g>
-
-                    <g id="domburg">
-                        <circle cx="220" cy="130" r="6" fill="#654321" />
-                        <text x="220" y="120" text-anchor="middle"
-                            style="font-size: 12px; fill: #a16207;">Domburg</text>
-                    </g>
-
-                    <!-- Detailed Troop Paths -->
-                    <path d="M350 200 L300 200" stroke="#8b4513" stroke-width="2" class="troop-path" fill="none" />
-                    <path d="M300 200 L250 150" stroke="#8b4513" stroke-width="2" class="troop-path" fill="none" />
-                    <path d="M250 150 L220 130" stroke="#8b4513" stroke-width="2" class="troop-path" fill="none" />
-                    <path d="M220 130 L200 180" stroke="#8b4513" stroke-width="2" class="troop-path" fill="none" />
-                    <path d="M300 200 L250 250" stroke="#8b4513" stroke-width="2" class="troop-path" fill="none" />
-                </svg>
+                <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+                    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
             </div>
         </div>
     </div>
@@ -526,6 +439,8 @@
         let currentView = 'title';
         let storySlideIndex = 0;
         let artifactsVisible = false;
+
+        let artifactLayerGroup = L.layerGroup();
 
         // Story Data
         // check with middelburg, vlissingen, westkapelle -> match fact with historical:)
@@ -628,17 +543,50 @@
             ]
         };
 
+        function loadMap() {
+            // Check if the map is already initialized
+            if (!window._mapInitialized) {
+                const map = L.map('map').setView([51.5, 3.8], 10);
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }).addTo(map);
+
+                const troopCities = [
+                    {
+                        coords: [51.4986, 3.6109],
+                        name: "Middelburg",
+                        description: "Liberated in November 1944 during the final phase of the Battle of the Scheldt."
+                    },
+                    {
+                        coords: [51.4426, 3.5739],
+                        name: "Vlissingen",
+                        description: "Landing site for Allied commandos during the amphibious assault on Walcheren."
+                    },
+                    {
+                        coords: [51.5417, 3.4381],
+                        name: "Westkapelle",
+                        description: "Site of intense shelling and the initial dike breach to flood German defenses."
+                    }
+                ];
+
+                troopCities.forEach(city => {
+                    L.marker(city.coords)
+                        .addTo(map)
+                        .bindPopup(`<strong>${city.name}</strong><br>${city.description}`);
+                });
+
+                window._mapInitialized = true;
+            }
+        }
+
         // Navigation Functions
         function startExperience() {
             document.getElementById('titlePage').classList.add('hidden');
             document.getElementById('mapView').classList.remove('hidden');
             currentView = 'map';
-        }
 
-        function zoomToWalcheren() {
-            document.getElementById('mapView').classList.add('hidden');
-            document.getElementById('walcherenView').classList.remove('hidden');
-            currentView = 'walcheren';
+            loadMap();
         }
 
         function backToMain() {
@@ -679,9 +627,12 @@
         }
 
         function exitStory() {
-            document.getElementById('storyMode').classList.add('hidden');
             document.getElementById('mapView').classList.remove('hidden');
+            document.getElementById('storyMode').classList.add('hidden');
             storySlideIndex = 0;
+            currentView = 'map';
+
+            loadMap();
         }
 
         // Artifact Functions
