@@ -111,7 +111,19 @@
             height: 100%;
             z-index: 0;
             background: #92400e;
-            filter: grayscale(0.8) contrast(1.4);
+            filter: grayscale(0.7) contrast(1.4);
+        }
+
+        /* deep brown/black pin */
+        .leaflet-marker-icon.tint-pin {
+            filter:
+                hue-rotate(15deg)
+                /* shift toward red-brown */
+                saturate(400%)
+                /* rich color */
+                brightness(80%)
+                /* darker */
+                drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
         }
 
         .leaflet-container {
@@ -155,6 +167,73 @@
         .map-region:hover {
             filter: brightness(1.1);
             transform: scale(1.02);
+        }
+
+        /* put in your <style> alongside the rest */
+        #legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: #333;
+            border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+            /* so it doesn't block map clicks */
+        }
+
+        #legend h4 {
+            margin: 0 0 6px;
+            font-size: 1rem;
+            color: #92400e;
+        }
+
+        .leg-swatch {
+            display: inline-block;
+            width: 18px;
+            height: 4px;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .leg-swatch.red {
+            background: red;
+            opacity: 0.6;
+        }
+
+        .leg-swatch.gray {
+            background: gray;
+            opacity: 0.6;
+        }
+
+        .leg-swatch.green {
+            background: green;
+            opacity: 0.6;
+        }
+
+
+        .popup-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .popup-gallery img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            margin: 2px;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            transition: transform .1s;
+        }
+
+        .popup-gallery img:hover {
+            transform: scale(1.1);
         }
 
         .story-mode {
@@ -399,6 +478,13 @@
             <div class="map-container">
                 <div id="map"></div>
 
+                <div id="legend">
+                    <h4>Troop Movements</h4>
+                    <div><span class="leg-swatch red"></span>Main push</div>
+                    <div><span class="leg-swatch gray"></span>Zuid-Beveland</div>
+                    <div><span class="leg-swatch green"></span>Walcheren</div>
+                </div>
+
                 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
                     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
             </div>
@@ -449,33 +535,33 @@
         // check with middelburg, vlissingen, westkapelle -> match fact with historical:)
         const storySlides = [
             {
-                title: "October 1944 - The Strategic Importance",
-                content: "The port of Antwerp was crucial for Allied supply lines. However, the Scheldt estuary remained under German control, making the port unusable.",
+                title: "Antwerp → Hulst (19 Sep 1944)",
+                content: "After breaking out of Normandy, Allied columns pushed north from Antwerp into occupied Zeeland, liberating Hulst on 19 September 1944.",
                 image: "/assets/images/Middelburg/6861.jpg"
             },
             {
-                title: "The German Fortress",
-                content: "German forces had heavily fortified Walcheren Island and the surrounding areas, creating a formidable defensive network.",
+                title: "Hulst → Axel → Philippine (Mid-Sept)",
+                content: "Through drenching rain and flooded polders, Canadian troops advanced past Axel into the village of Philippine by late September.",
                 image: "/assets/images/Middelburg/67111.jpg"
             },
             {
-                title: "South Beveland Assault",
-                content: "Allied forces began their assault on South Beveland, fighting through flooded polders and determined German resistance.",
+                title: "Philippine → Sas van Gent → Terneuzen",
+                content: "On 19 September they took Sas van Gent, then swung east into Terneuzen by the 20th, opening the flank toward South Beveland.",
                 image: "/assets/images/Middelburg/FO066408.jpg"
             },
             {
-                title: "The Crossing to Walcheren",
-                content: "November 1st, 1944 - Allied forces launched amphibious assaults on Walcheren Island from multiple directions.",
+                title: "Push to South Beveland & The Sloedam",
+                content: "With Terneuzen secured, the Allies struck across the narrow Sloedam causeway toward Walcheren Island in early November.",
                 image: "/assets/images/Vlissingen/35483.jpg"
             },
             {
-                title: "Liberation of Middelburg",
-                content: "After fierce fighting, Middelburg was liberated, marking a crucial victory in the battle for Zeeland.",
+                title: "Liberation of Middelburg (3 Nov 1944)",
+                content: "After fierce street fighting, Middelburg fell on 3 November — its cathedral ruins a symbol of Zeeland’s liberation.",
                 image: "/assets/images/Vlissingen/35530.jpg"
             },
             {
-                title: "Victory and Liberation",
-                content: "By November 8th, 1944, Zeeland was liberated, opening the vital supply route through Antwerp.",
+                title: "Final Assault on Walcheren",
+                content: "By 8 November the entire Scheldt Estuary was clear of Germans, finally opening Antwerp’s port for the Allied supply effort.",
                 image: "/assets/images/Vlissingen/35531.jpg"
             }
         ];
@@ -557,26 +643,57 @@
                 }).addTo(map);
 
                 const troopCities = [
-                    { name: "South Beveland", coords: [51.4743, 3.8997] },
-                    { name: "Middelburg", coords: [51.4986, 3.6109] },
-                    { name: "Oostkapelle", coords: [51.5736, 3.5511] },
-                    { name: "Domburg", coords: [51.5636, 3.4931] },
-                    { name: "Westkapelle", coords: [51.5375, 3.4369] },
-                    { name: "Vlissingen", coords: [51.4426, 3.5739] },
-                    { name: "Dishoek", coords: [51.4694, 3.5300] },
-                    { name: "Zoutelande", coords: [51.4922, 3.4877] },
-                    { name: "Rilland", coords: [51.4339, 4.1486] },
-                    { name: "Tholen", coords: [51.5339, 4.2194] },
-                    { name: "St. Annaland", coords: [51.5708, 4.1072] },
-                    { name: "St. Philipsland", coords: [51.6053, 4.0608] },
-                    { name: "Zierikzee", coords: [51.6494, 3.9167] },
-                    { name: "Brouwershaven", coords: [51.7258, 3.9092] }
+                    { name: "South Beveland", coords: [51.4743, 3.8997], liberationDate: "19-09-1944" },
+                    { name: "Middelburg", coords: [51.4986, 3.6109], liberationDate: "03-11-1944", images: ["/assets/images/Middelburg/6861.jpg", "/assets/images/Middelburg/67111.jpg", "/assets/images/Middelburg/FO066408.jpg"] },
+                    { name: "Oostkapelle", coords: [51.5736, 3.5511], liberationDate: "04-11-1944" },
+                    { name: "Domburg", coords: [51.5636, 3.4931], liberationDate: "01-11-1944" },
+                    { name: "Westkapelle", coords: [51.5375, 3.4369], liberationDate: "01-11-1944", images: ["/assets/images/Westkapelle/FO039809.jpg", "/assets/images/Westkapelle/FO040023.jpg", "/assets/images/Westkapelle/FO040039.jpg"] },
+                    { name: "Vlissingen", coords: [51.4426, 3.5739], liberationDate: "01-11-1944", images: ["/assets/images/Vlissingen/35483.jpg", "/assets/images/Vlissingen/35530.jpg", "/assets/images/Vlissingen/35531.jpg", "/assets/images/Vlissingen/35533.jpg", "/assets/images/Vlissingen/35534.jpg", "/assets/images/Vlissingen/35537.jpg", "/assets/images/Vlissingen/35541.jpg", "/assets/images/Vlissingen/35803.jpg"] },
+                    { name: "Dishoek", coords: [51.4694, 3.5300], liberationDate: "03-11-1944" },
+                    { name: "Zoutelande", coords: [51.4922, 3.4877], liberationDate: "03-11-1944" },
+                    { name: "Rilland", coords: [51.4339, 4.1486], liberationDate: "25-10-1944" },
+                    { name: "Tholen", coords: [51.5339, 4.2194], liberationDate: "04-11-1944" },
+                    { name: "St. Annaland", coords: [51.5708, 4.1072], liberationDate: "Early Nov 1944" },
+                    { name: "St. Philipsland", coords: [51.6053, 4.0608], liberationDate: "Early Nov 1944" },
+                    { name: "Zierikzee", coords: [51.6494, 3.9167], liberationDate: "Early Nov 1944" },
+                    { name: "Brouwershaven", coords: [51.7258, 3.9092], liberationDate: "Early Nov 1944" }
                 ];
 
                 troopCities.forEach(city => {
-                    L.marker(city.coords)
-                        .addTo(map)
-                        .bindPopup(`<strong>${city.name}</strong>`);
+                    const tintedIcon = L.icon({
+                        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+                        iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+                        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        className: 'tint-pin'
+                    });
+
+
+                    const marker = L.marker(city.coords, { icon: tintedIcon }).addTo(map);
+
+                    let popupHtml = `
+    <strong>${city.name}</strong><br/>
+    Liberated: <em>${city.liberationDate}</em>
+  `;
+
+                    if (city.images && city.images.length) {
+                        // show just the first image as a small thumbnail…
+                        popupHtml += `
+      <div style="margin-top:8px;">
+        <img 
+          src="${city.images[0]}" 
+          style="width:100px; height:auto; display:block; margin-bottom:4px;"
+          alt="${city.name} thumbnail"
+        >
+        <a href="${city.images[0]}" target="_blank" style="text-decoration:none; color:#b45309;">
+          View all images
+        </a>
+      </div>
+    `;
+                    }
+                    marker.bindPopup(popupHtml);
                 });
 
                 const movementTroops = [
