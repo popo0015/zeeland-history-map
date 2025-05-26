@@ -582,27 +582,20 @@
                 const movementTroops = [
                     // Antwerp → Hulst (19-9)
                     [[51.2194, 4.4025], [51.3725, 4.0100]],
-
                     // Hulst → Axel → Philippine (mid-Sept)
                     [[51.3725, 4.0100], [51.3090, 3.9815], [51.3130, 3.8890]],
-
                     // Philippine → Sas van Gent (19-9)
                     [[51.3130, 3.8890], [51.3041, 3.8267]],
-
                     // Sas van Gent → Terneuzen (20-9)
                     [[51.3041, 3.8267], [51.3380, 3.8360]],
-
                     // Terneuzen → Zaamslag → Hoek → Biervliet → IJzendijke (17-10)
                     [[51.3380, 3.8360], [51.3266, 3.6492], [51.3323, 3.6270], [51.3438, 3.5526], [51.3250, 3.5908]],
-
                     // IJzendijke → Oostburg → Zuidzande (29-10)
                     [[51.3250, 3.5908], [51.3391, 3.4710], [51.4760, 3.4766]],
-
                     // Zuidzande → Retranchement → Sluis (1-11)
                     [[51.4760, 3.4766], [51.4780, 3.4470], [51.3594, 3.5831]]
                 ];
 
-                // 2️⃣ “Movement Toward Zuid-Beveland”
                 const movementZB = [
                     [[51.3380, 3.8360], [51.4845, 3.8963]],        // Terneuzen → Baarland
                     [[51.4845, 3.8963], [51.5035, 3.8677], [51.4702, 3.8962], [51.5040, 3.8740]], // Baarland→Borssele→s-Gravenpolder→Goes
@@ -611,7 +604,6 @@
                     [[51.4936, 3.8921], [51.4339, 4.1486]]         // Krabbendijke→Rilland
                 ];
 
-                // 3️⃣ “Crossing to Walcheren”
                 const crossingWalcheren = [
                     [[51.4743, 3.8997], [51.4873, 3.9043]],        // South Beveland→Sloedam→Arnemuiden
                     [[51.4873, 3.9043], [51.4986, 3.6109]],        // Arnemuiden→Middelburg
@@ -624,39 +616,47 @@
                 ];
 
                 function addTroopPath(path, color) {
-                    // 1) Draw the base red line
-                    L.polyline(path, { color: color, weight: 3 }).addTo(map);
+                    // 1) Draw a semi-transparent dashed line
+                    L.polyline(path, {
+                        color: color,
+                        weight: 4,
+                        opacity: 0.6,
+                        dashArray: '8,6'
+                    }).addTo(map);
 
-
-                    // 2) For each segment, place a rotated SVG arrow at its midpoint
+                    // 2) Smaller arrows with a subtle drop-shadow, only on longer segments
                     path.slice(0, -1).forEach((pt, i) => {
                         const next = path[i + 1];
+                        // only if segment is “long enough” (~1km). Map.distance uses meters.
+                        if (map.distance(pt, next) < 1000) return;
+
                         // midpoint
                         const midLat = (pt[0] + next[0]) / 2;
                         const midLng = (pt[1] + next[1]) / 2;
-                        // angle in degrees (Leaflet’s lat/lng order flips x/y)
+
+                        // angle
                         const angle = Math.atan2(
                             next[1] - pt[1],
                             next[0] - pt[0]
                         ) * 180 / Math.PI;
 
-                        // custom DivIcon with inline SVG triangle
+                        // smaller, fainter arrow
                         const arrowIcon = L.divIcon({
-                            className: '',            // no extra CSS
+                            className: '',
                             html: `
         <div style="
           transform: rotate(${angle}deg);
-          width:20px; height:20px;
-          display:flex; align-items:center;
-          justify-content:center;
-          ">
-          <svg width="14" height="14" viewBox="0 0 10 10">
-            <polygon points="0,0 10,5 0,10" fill="red"/>
+          width:12px; height:12px;
+          display:flex; align-items:center; justify-content:center;
+          filter: drop-shadow(0 0 1px rgba(0,0,0,0.5));
+        ">
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <polygon points="0,0 10,5 0,10" fill="${color}" opacity="0.8"/>
           </svg>
         </div>
       `,
-                            iconSize: [20, 20],
-                            iconAnchor: [10, 10],     // center the arrow
+                            iconSize: [12, 12],
+                            iconAnchor: [6, 6],
                             interactive: false
                         });
 
@@ -665,7 +665,7 @@
                 }
 
                 movementTroops.forEach(leg => addTroopPath(leg, 'red'));
-                movementZB.forEach(leg => addTroopPath(leg, 'blue'));
+                movementZB.forEach(leg => addTroopPath(leg, 'gray'));
                 crossingWalcheren.forEach(leg => addTroopPath(leg, 'green'));
 
                 window._mapInitialized = true;
