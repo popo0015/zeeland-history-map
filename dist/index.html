@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle of the Scheldt - Interactive Historical Map</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Crimson Text', serif;
+            background: linear-gradient(135deg, #f4f1e8 0%, #e8e2d4 100%);
+            min-height: 100vh;
+        }
+
+        /* --------------------  hamburger + side-drawer  -------------------- */
+
+        .menu-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 48px;
+            height: 48px;
+            background: #a16207;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 60;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .menu-button:hover {
+            background: #92400e;
+        }
+
+        .menu-button span {
+            position: relative;
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: #fff;
+        }
+
+        .menu-button span::before,
+        .menu-button span::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 22px;
+            height: 2px;
+            background: inherit;
+            transition: transform 0.3s ease;
+        }
+
+        .menu-button span::before {
+            transform: translateY(-6px);
+        }
+
+        .menu-button span::after {
+            transform: translateY(6px);
+        }
+
+        .side-menu {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            width: 260px;
+            background: #fff;
+            box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 55;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .side-menu.open {
+            transform: translateX(0);
+        }
+
+        .side-menu h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 16px;
+        }
+
+        .side-menu ul {
+            list-style: none;
+        }
+
+        .side-menu li+li {
+            margin-top: 12px;
+        }
+
+        .side-menu a {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: none;
+            border: none;
+            font-size: 1.125rem;
+            color: #b45309;
+            text-decoration: none;
+            text-align: left;
+            transition: color 0.2s ease;
+        }
+
+        .side-menu a:hover {
+            color: #92400e;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .title-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: url("/assets/35530-DNgur_8j.jpg");
+            background-size: cover;
+        }
+
+        .title-content {
+            text-align: center;
+            background: white;
+            padding: 60px;
+            border: 3px solid #8b7355;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-width: 800px;
+        }
+
+        .title-content h1 {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #92400e;
+            margin-bottom: 24px;
+        }
+
+        .title-content h2 {
+            font-size: 1.5rem;
+            color: #b45309;
+            margin-bottom: 32px;
+        }
+
+        .title-content p {
+            font-size: 1.125rem;
+            color: #a16207;
+            margin-bottom: 32px;
+            line-height: 1.75;
+        }
+
+        .btn {
+            background: #a16207;
+            color: white;
+            padding: 16px 32px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            background: #92400e;
+        }
+
+        .btn,
+        .btn-secondary {
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+            font-size: 1.125rem;
+            font-weight: 600;
+            padding: 14px 28px;
+            transition: background 0.25s ease;
+            color: #fff;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary {
+            background: #d97706;
+        }
+
+        .btn-secondary:hover {
+            background: #b45309;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .map-view {
+            min-height: 100vh;
+            padding: 32px;
+        }
+
+        #mapView {
+            width: 100%;
+            height: 100vh;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: #92400e;
+            filter: grayscale(0.7) contrast(1.4);
+        }
+
+        /* deep brown/black pin */
+
+        .leaflet-marker-icon.tint-pin {
+            filter:
+                hue-rotate(15deg)
+                /* shift toward red-brown */
+                saturate(400%)
+                /* rich color */
+                brightness(80%)
+                /* darker */
+                drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+        }
+
+        .leaflet-container {
+            z-index: 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #92400e;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #b45309;
+            font-size: 1.125rem;
+        }
+
+        .controls {
+            margin-top: 16px;
+        }
+
+        .map-container {
+            height: 80vh;
+            background: white;
+            border: 3px solid #8b7355;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            position: relative;
+        }
+
+        .map-region {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .map-region:hover {
+            filter: brightness(1.1);
+            transform: scale(1.02);
+        }
+
+        /* put in your <style> alongside the rest */
+
+        #legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: #333;
+            border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+            /* so it doesn't block map clicks */
+        }
+
+        #legend h4 {
+            margin: 0 0 6px;
+            font-size: 1rem;
+            color: #92400e;
+        }
+
+        .leg-swatch {
+            display: inline-block;
+            width: 18px;
+            height: 4px;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .leg-swatch.red {
+            background: red;
+            opacity: 0.6;
+        }
+
+        .leg-swatch.gray {
+            background: gray;
+            opacity: 0.6;
+        }
+
+        .leg-swatch.green {
+            background: green;
+            opacity: 0.6;
+        }
+
+        .popup-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .popup-gallery img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            margin: 2px;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            transition: transform .1s;
+        }
+
+        .popup-gallery img:hover {
+            transform: scale(1.1);
+        }
+
+        .story-mode {
+            min-height: 100vh;
+            background: black;
+            color: white;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .story-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .story-slide {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease;
+        }
+
+        .story-slide.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .story-slide img {
+            max-width: 100%;
+            height: 300px;
+            object-fit: cover;
+            margin: 0 auto 24px;
+            filter: sepia(0.8) contrast(1.2) brightness(0.9);
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .story-slide h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        .story-slide p {
+            font-size: 1.25rem;
+            line-height: 1.75;
+        }
+
+        .story-controls {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .exit-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #dc2626;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .exit-btn:hover {
+            background: #b91c1c;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        .troop-path {
+            stroke-dasharray: 5, 5;
+            animation: march 3s linear infinite;
+        }
+
+        @keyframes march {
+            0% {
+                stroke-dashoffset: 0;
+            }
+
+            100% {
+                stroke-dashoffset: 20;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .title-content {
+                padding: 40px 20px;
+            }
+
+            .title-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .artifact-sidebar {
+                width: 100%;
+            }
+
+            .map-view {
+                padding: 16px;
+            }
+        }
+
+        /* --------------------  artifact gallery  -------------------- */
+
+        .gallery-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .artifact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill,
+                    minmax(180px, 250px));
+            /* prevent over‑stretching */
+            gap: 20px;
+            justify-content: center;
+            /* center the row when few items */
+        }
+
+        .artifact-card {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -5px rgba(0, 0, 0, 0.08);
+            transition: transform 0.25s ease;
+            cursor: pointer;
+        }
+
+        .artifact-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .artifact-card img {
+            width: 100%;
+            aspect-ratio: 4/3;
+            /* keep a consistent ratio instead of fixed height */
+            object-fit: cover;
+        }
+
+        .artifact-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            padding: 10px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            font-size: 0.875rem;
+        }
+
+        .artifact-card:hover .artifact-overlay,
+        .artifact-card:focus .artifact-overlay {
+            transform: translateY(0);
+        }
+
+        .artifact-overlay h4 {
+            font-size: 1rem;
+            margin-bottom: 4px;
+            color: #fbbf24;
+        }
+
+        /* --------------------  modal for full artifact view  -------------------- */
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 80;
+        }
+
+        .modal.hidden {
+            display: none !important;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            width: 90%;
+            max-width: 600px;
+            padding: 24px;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-content img {
+            width: 100%;
+            height: auto;
+            margin-bottom: 16px;
+            border-radius: 8px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #dc2626;
+            color: #fff;
+            border: none;
+            width: 32px;
+            height: 32px;
+            font-size: 1.25rem;
+            line-height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .title-content {
+                padding: 40px 20px;
+            }
+
+            .title-content h1 {
+                font-size: 2.25rem;
+            }
+
+            .map-view {
+                padding: 16px 0;
+            }
+
+            .menu-button {
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
+
+        .modal-content.wide {
+            display: flex;
+            flex-direction: row;
+            background: #fff;
+            width: 90vw;
+            max-width: 1200px;
+            height: 80vh;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .modal-left,
+        .modal-right {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .modal-left img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #dc2626;
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px 12px;
+            border-radius: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content.wide {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .modal-close {
+                top: 8px;
+                right: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Title Page -->
+    <div id="titlePage" class="title-page">
+        <div class="title-content">
+            <h1>The Battle of the Scheldt</h1>
+            <h2>October - November 1944</h2>
+            <p>
+                Explore the liberation of Zeeland through an interactive journey of courage, strategy, and sacrifice.
+                Follow the Allied forces as they fought to open the vital port of Antwerp.
+            </p>
+            <button onclick="startExperience()" class="btn">
+                Begin Historical Journey
+            </button>
+            <button onclick="startStory()" class="btn btn-secondary">
+                Start Story Mode
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Map View -->
+    <div id="mapView" class="map-view hidden">
+        <!-- hamburger -->
+        <button id="menuToggle" class="menu-button" onclick="toggleMenu()">
+            <span></span>
+        </button>
+        <!-- side-drawer -->
+        <nav id="sideMenu" class="side-menu" aria-label="Main Navigation">
+            <h2>Menu</h2>
+            <ul>
+                <li>
+                    <a href="#" onclick="startExperience(); toggleMenu();">Map View</a>
+                </li>
+                <li>
+                    <a href="#" onclick="startStory(); toggleMenu();">Story Mode</a>
+                </li>
+                <li>
+                    <a href="#" onclick="showArtifactGallery(); toggleMenu();">Artifacts</a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="container">
+            <!-- Map Container -->
+            <div class="map-container">
+                <div id="map"></div>
+
+                <div id="legend">
+                    <h4>Troop Movements</h4>
+                    <div><span class="leg-swatch red"></span>Main push</div>
+                    <div><span class="leg-swatch gray"></span>Zuid-Beveland</div>
+                    <div><span class="leg-swatch green"></span>Walcheren</div>
+                </div>
+
+                <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+                    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+            </div>
+        </div>
+    </div>
+
+    <!-- Story Mode -->
+    <div id="storyMode" class="story-mode hidden">
+        <button onclick="exitStory()" class="exit-btn">
+            Exit Story
+        </button>
+
+        <div id="storyContent" class="story-content">
+            <!-- Story slides will be populated by JavaScript -->
+        </div>
+
+        <div class="story-controls">
+            <button onclick="nextStorySlide()" class="btn">
+                Next →
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== ARTIFACT GALLERY ===== -->
+    <section id="artifactGallery" class="map-view hidden">
+        <div class="container">
+            <header class="header">
+                <h1>Artifact Gallery</h1>
+                <p>
+                    Select a category to explore original WWII objects recovered in
+                    Zeeland.
+                </p>
+                <button class="btn" onclick="backToMap()">← Back to Map</button>
+            </header>
+            <div id="galleryFilters" class="gallery-controls"></div>
+            <div id="artifactGrid" class="artifact-grid"></div>
+        </div>
+    </section>
+
+    <!--  Modal HTML -->
+    <div id="artifactModal" class="modal hidden" onclick="closeModal(event)">
+        <div class="modal-content wide">
+            <div class="modal-left">
+                <img id="modalImg" src="" alt="Artifact image" />
+            </div>
+            <div class="modal-right">
+                <button class="modal-close" onclick="closeModal(event)">×</button>
+                <h3 id="modalTitle"></h3>
+                <p id="modalDesc"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // Application State
+        let currentView = 'title';
+        let storySlideIndex = 0;
+        let artifactsVisible = false;
+        let galleryCategory = "All";
+
+        let artifactLayerGroup = L.layerGroup();
+
+        // Story Data
+        // check with middelburg, vlissingen, westkapelle -> match fact with historical:)
+        const storySlides = [
+            {
+                title: "Antwerp → Hulst (19 Sep 1944)",
+                content: "After breaking out of Normandy, Allied columns pushed north from Antwerp into occupied Zeeland, liberating Hulst on 19 September 1944.",
+                image: "/assets/images/Middelburg/6861.jpg"
+            },
+            {
+                title: "Hulst → Axel → Philippine (Mid-Sept)",
+                content: "Through drenching rain and flooded polders, Canadian troops advanced past Axel into the village of Philippine by late September.",
+                image: "/assets/images/Middelburg/67111.jpg"
+            },
+            {
+                title: "Philippine → Sas van Gent → Terneuzen",
+                content: "On 19 September they took Sas van Gent, then swung east into Terneuzen by the 20th, opening the flank toward South Beveland.",
+                image: "/assets/images/Middelburg/FO066408.jpg"
+            },
+            {
+                title: "Push to South Beveland & The Sloedam",
+                content: "With Terneuzen secured, the Allies struck across the narrow Sloedam causeway toward Walcheren Island in early November.",
+                image: "/assets/images/Vlissingen/35483.jpg"
+            },
+            {
+                title: "Liberation of Middelburg (3 Nov 1944)",
+                content: "After fierce street fighting, Middelburg fell on 3 November — its cathedral ruins a symbol of Zeeland’s liberation.",
+                image: "/assets/images/Vlissingen/35530.jpg"
+            },
+            {
+                title: "Final Assault on Walcheren",
+                content: "By 8 November the entire Scheldt Estuary was clear of Germans, finally opening Antwerp’s port for the Allied supply effort.",
+                image: "/assets/images/Vlissingen/35531.jpg"
+            }
+        ];
+
+        // Artifact data: grouped per region, each item has category we can filter on
+        const artifacts = [
+            {
+                name: "Dolk, een zogenaamde 'stormdolk' M-1917",
+                category: "Weaponry",
+                description: `De ontwikkeling van de Nederlandse stormdolk heeft haar oorsprong in 1917. In dat jaar werden de Stormtroepen opgericht als een speciale eenheid, die de reguliere troepen bij een aanval moesten voorgaan. Door de ervaringen van de op dat moment elders in Europa woedende loopgraven oorlog, was gebleken dat er behoeft was aan een kort handwapen voor man tegen man gevecht.
+De geweren en karabijnen met een daarop gemonteerde bajonet was niet goed hanteerbaar in de loopgraaf. Er was weer hernieuwde belangstelling voor de aloude dolk. Als basis voor de stormdolk werden afgekeurde spoorrails gebruikt, de tweesnijdende kling werd daar van gesmeed . Het handvat werd gemaakt van notenhout en de schede van rundleder.
+Op 1 oktober 1917 werd het prototype goedgekeurd en werden er 30.000 besteld bij de Artillerie Inrichtingen. De verwachting was dat er uiteindelijk ca. 50.000 nodig zouden zijn. De eerste dolken werden in maart 1918 uitgereikt.
+Gedurende de mobilisatie in 1939-1940 werd de stormdolk opnieuw uitgereikt aan:
+1. alle onberedenen van de Infanterie, Cavalerie, Wielrijders en Artillerie, die behoren tot het strijdende gedeelte van de troep en in overeenstemming met L.O. 228 van 1935 enkel met pistool of revolver zijn bewapend en dus geen houw- of steekwapen hebben.
+2. alle bereden officieren (de dolk te dragen in de drager van het (draagriemenstelsel)
+3. alle bereden onderofficieren, voor zover deze niet van een karabijn zijn voorzien (de dolk te dragen aan de koppel).
+De dolken die daarna nog over waren konden door de Commandanten worden uitgereikt aan troepen die daar nog behoefte aan hadden.`,
+                image: "assets/images/Category/Weaponry/BMZ-2022_02_0003.jpg",
+            },
+            {
+                name: "rekenliniaal",
+                category: "tools",
+                description: `Duitse waaierhoekmeter t.b.v. artilleriedoeleinden.`,
+                image: "assets/images/Category/Tools/SBKZ-000046.jpg",
+            },
+            {
+                name: "centraalvuurgeweer",
+                category: "Weaponry",
+                description: `8-schots centraalvuurgeweer systeem Lee Enfield model MkIII, kaliber 7.7 x 56 R (.303)`,
+                image:
+                    "assets/images/Category/Weaponry/12b10ea5-3a1b-41b3-b027-d0ccc2913666.jpg",
+            },
+            {
+                name: "gereedschapskist - 2cm Flak 30 gereedschapskist, met gedeeltelijke inhoud",
+                category: "tools",
+                description: `Zware stalen gereedschapskist met een grijze verfafwerking. Deze kist bevat gereedschap voor een 2 cm Flak 30 geschut wat aan boord stond van een schip van de Duitse Kriegsmarine.`,
+                image: "assets/images/Category/Tools/SBKZ-000026b.jpg",
+            },
+            {
+                name: "certificaat",
+                category: "Printed materials",
+                description: `Dit ingelijste certificaat is een erkenning van het buitengewone verzetswerk van Janna Huissen-Lokerse tijdens de Tweede Wereldoorlog. Janna ontving twee onderscheidingen van de geallieerden voor haar moedige daden: één van Generaal Dwight D. Eisenhower en een Award van een bekende Marshal. Dit specifieke certificaat was voor haar van grote persoonlijke waarde en hing boven haar bed als een constante herinnering aan haar bijdragen aan de bevrijding.
+ 
+In de oorlogsjaren verrichtte Janna ondergronds verzetswerk, waarbij ze een actieve rol speelde in het ondersteunen van onderduikers. Ze voorzag hen van rookwaar en bonnen en hielp zelfs een Engelse piloot, die neergeschoten was nabij Nisse, te vervoeren. Met behulp van Henk Verhage van de veerdienst, die vloeiend Engels sprak, slaagde ze erin de piloot per fiets naar een boot te brengen voor verder vervoer naar Terneuzen, vanwaar hij probeerde Engeland te bereiken.
+Janna trouwde op 26 oktober 1945 met Chris Huissen.`,
+                image: "assets/images/Category/Printed Materials/SBKZ-003142a.jpg",
+            },
+            {
+                name: "distributiekaart",
+                category: "Printed materials",
+                description: `Dit object is een 'Rijks-bruinbroodkaart', een distributiekaart die tijdens de Tweede Wereldoorlog in Nederland werd gebruikt om de schaarse voedselvoorraden, zoals brood en meel, te verdelen. Deze kaarten waren deel van een strikt gereguleerd systeem dat burgers recht gaf op een bepaalde hoeveelheid voedsel per periode, in dit geval voor de twaalfde week. Op de kaart staan specifieke regels vermeld, zoals het verbod op het geheel of gedeeltelijk overdragen van de kaart en het verbod om losse bonnen te gebruiken. Ook mocht de kaart niet aan de bakker of winkelier in bewaring worden gegeven en de verkoper moest de bonnen afscheuren. Het overtreden van de distributieregels kon bestraft worden volgens de Distributiewet van 1916, wat de ernst van deze reglementen onderstreept. Dit soort kaarten is een herinnering aan de moeilijke tijden van schaarste en de complexe systemen die nodig waren om de verdeling van essentiële goederen te beheren.`,
+                image: "assets/images/Category/Printed Materials/SBKZ-003505.jpg",
+            },
+            {
+                name: "(scheeps)klok , Kriegsmarine",
+                category: "Navigation Equipment",
+                description: `Een Keininger en Obergfell U Boot klok met een acht daags uurwerk. Verzilverde wijzerplaat met de M van marine en Kriegsmarine logo.  Wijzerplaat met Arabische cijfers en secondewijzer.  De klok wordt luchtdicht afgesloten doormiddel van een deurtje met glas.  Aan de achterzijde voorzien van drie ophangpunten.
+ 
+Deze klok ik uit een Kriegsmarine schip geschroefd welke achter was gebleven in de haven van Terneuzen na de bevrijding in 1944. Wij hebben de klok verkregen via Piet de Back uit Oost-Souburg, die hem van een vriend (die hem in 1944 zelf uit het schip geschroefd heeft) gekregen heeft.`,
+                image: "assets/images/Category/Navigation Equipment/SBKZ-000017.jpg",
+            },
+            {
+                name: "Leitz Wetzlar Verrekijker – 7 x 50 (Doppelfernrohr mit Kasten)",
+                category: "Navigation Equipment",
+                description: `Deze Leitz Wetzlar verrekijker van het type 7 x 50 werd gebruikt aan boord van schepen van de Duitse Kriegsmarine. Beide oculairs zijn afzonderlijk scherp te stellen. De verrekijker draagt duidelijk gestempelde specificaties, waaronder het logo van de Duitse adelaar met lauwerkrans en swastika. Het geheel is compleet met het originele leren draagriempje, Benutzer-kapje en de bijbehorende leren opbergtas.
+
+* Vergroting: 7x
+* Objectieflensdiameter: 50 mm
+* Productienummer: 20733
+* Toegewezen aan: N. North Sea – thuishaven Wilhelmshaven
+
+Deze verrekijker werd in 1944 door de heer K. (Kees) van de Tunne uit Yerseke meegenomen van een schip van de Kriegsmarine dat na de Bevrijding nog in de haven lag. Kees gebruikte de kijker vervolgens zijn hele werkzame leven als schipper op een vissersschip, dat thuishoorde in de haven van Yerseke.`,
+                image: "assets/images/Category/Navigation Equipment/SBKZ-000014a.jpg",
+            },
+            {
+                name: "Toegangspas dwangarbeider, M. van Liere",
+                category: "religious & personal items",
+                description: `Marinus van Liere (25-8-1924) wordt tijdens een opstootje in Goes opgepakt. Hij is dan 18 jaar. In april 1943 wordt hij op de trein gezet naar Leipzig om daar als dwangarbeider te werken in de ijzergieterij van Rudolf Sack.
+Bij Sack werkt dan al een aantal Zeeuwen in het kader van de Arbeitseinsatz. Het bedrijf is in 1854 ontstaan vanuit een eenvoudige dorpssmederij in Löben als producent van landbouwwerktuigen. Van 1870 gaat het bedrijf ook exporteren naar o.m. Rusland, de Balkan en Argentinië. Het bedrijf is toonaangevend in de fabricage van ploegen, later verbreedt men het aanbod tot eggen, grondboor- en zaaimachines e.d.
+Het werk in de fabriek is zwaar, een werkdag is maar liefst 12 uur lang met een pauze van drie kwartier. De dagdienst loopt van 6 uur in de ochtend tot 6 uur ’s avonds – de nachtdienst van ’s avonds 6 uur tot de andere ochtend 6 uur. Daarbij komt dan nog een half uur lopen van en naar het Lager waar men met veel andere dwangarbeiders is ondergebracht. Gelukkig is de zondag in principe vrij, al moet dan wel de barak opgeruimd en schoongemaakt worden. Vanaf 1944 worden de Sack-werknemers ook diverse keren ingezet om in Leipzig te helpen bij het puinruimen na een geallieerd bombardement.
+Aanvankelijk wordt er maar weinig oorlogsmaterieel gemaakt: men produceert voornamelijk allerhande landbouwmachines en minder dan 20% van de productie is voor het Duitse leger. Gedurende de oorlog neemt dat percentage echter zienderogen toe en eind 1944 wordt er vrijwel uitsluitend voor de oorlogsindustrie gewerkt.
+Op 18 april 1945 komt de bevrijding: om 8.00 uur rijden de Amerikanen binnen en is de oorlog voor de dwangarbeiders voorbij. Blij dat hij weer vrij is gaat hij op reis terug naar Zeeland. Lopend, liftend en waar mogelijk per openbaar vervoer keert hij terug naar Wolphaartsdijk. Over zijn tijd in Duitsland heeft hij nooit meer gesproken.
+De administratie van het bedrijf tijdens de tweede wereldoorlog is vrijwel volledig behouden. Het bevindt zich nu in het Staatsarchiv Sachsen in Leipzig en het is daar ook raadpleegbaar. In de administratie bevinden zich ook de personeelskaarten van veel Nederlandse dwangarbeiders en krijgsgevangenen.
+ 
+Tijdens zijn verblijf heeft Van Liere nauwgezet bijgehouden wat er is gebeurd: er is 217 keer alarm geweest en 19 keer daadwerkelijk gebombardeerd. De belevenissen van de Zeeuwse dwangarbeiders bij Rudolf Sack in Leipzig zijn beschreven in het boek GEDWONGEN VRIENDSCHAP.`,
+                image:
+                    "assets/images/Category/Religious_Personal Items/BMZ-000013.jpg",
+            },
+            {
+                name: "Chanoekia, kaarsen standaard met negen armen",
+                category: "religious & personal items",
+                description: `Chanoekia met negen armen. De kandelaar staat op drie voeten in de vorm van geschubte dolfijnen. De stam eindigt bovenaan in een bol met daarop een davidster.`,
+                image:
+                    "assets/images/Category/Religious_Personal Items/BMZ-000017.jpg",
+            },
+            {
+                name: "identiteitsplaatje",
+                category: "religious & personal items",
+                description: `Deze broche, een kenmerkend insigne van de Joodse Getto Ordedienst, is vervaardigd uit aluminium en heeft een zeskantige vorm. Op de voorzijde van de broche is een blauwe achtergrond zichtbaar, waartegen een veld met een blauwe Davidster is afgebeeld.
+Rond de Davidster is het opschrift "J R W R Z W" geslagen, een codering die mogelijk verwijst naar een specifieke getto of eenheid binnen de ordedienst. Het rondom de rand van de broche aangebrachte rondschrift "ORDNUNGSDIENST STUZBA PORZADKOWA" duidt op de functie of afdeling binnen de getto-gemeenschap, namelijk de Ordedienst, die verantwoordelijk was voor het handhaven van orde en veiligheid.
+De broche symboliseert een complex en vaak pijnlijk aspect van het leven in de getto's tijdens de Tweede Wereldoorlog, waar Joodse gemeenschappen, onder extreem moeilijke omstandigheden, zelf de orde moesten handhaven.`,
+                image:
+                    "assets/images/Category/Religious_Personal Items/BMZ-000019.jpg",
+            },
+            {
+                name: "Verbodsbord, voor Joden verboden",
+                category: "Miscellaneous",
+                description: `Dit object is een wit houten verbodsbord met de zwarte tekst "Voor Joden verboden", ondertekend door de procureur-generaal fungerend gewestelijk directeur van politie van Genechten. Aan de linkerkant van de tekst is een militair waarmerk zichtbaar.
+
+Het bord heeft een specifieke historische context, aangezien het ooit aan de schuur van noodslager "Kleinepier" uit Grijpskerke hing. Door dit bord aan zijn gevel te bevestigen, wekten de Duitsers de indruk dat de slager Duitsgezind was, wat resulteerde in minder frequente controles. In werkelijkheid bood hij echter clandestiene hulp aan de lokale bevolking door het uitvoeren van illegale slachtingen.
+
+Na het overlijden van de heer Kleinepier werd zijn woning verkocht. In 2006 ontdekten de nieuwe bewoners dit bordje verborgen achter een dubbele wand tijdens het opknappen van de schuur. De huidige bewoners namen vervolgens contact op met zijn neef Jan Kleinepier uit Melliskerke, die het bordje aan ons museum heeft geschonken.
+
+Dit verbodsbord is niet alleen een voorbeeld van de anti-Joodse maatregelen tijdens de Tweede Wereldoorlog, maar ook een getuigenis van de verborgen vormen van verzet en overleving in bezet Nederland.`,
+                image: "assets/images/Category/Miscellaneous/SBKZ-000051b.jpg",
+            },
+        ];
+
+        function loadMap() {
+            // Check if the map is already initialized
+            if (!window._mapInitialized) {
+                const map = L.map('map').setView([51.5, 3.8], 10);
+
+                // Add OpenStreetMap tiles
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: 'Map data © OpenStreetMap contributors'
+                }).addTo(map);
+
+                const troopCities = [
+                    { name: "South Beveland", coords: [51.4743, 3.8997], liberationDate: "19-09-1944" },
+                    { name: "Middelburg", coords: [51.4986, 3.6109], liberationDate: "03-11-1944", images: ["/assets/images/Middelburg/6861.jpg", "/assets/images/Middelburg/67111.jpg", "/assets/images/Middelburg/FO066408.jpg"] },
+                    { name: "Oostkapelle", coords: [51.5736, 3.5511], liberationDate: "04-11-1944" },
+                    { name: "Domburg", coords: [51.5636, 3.4931], liberationDate: "01-11-1944" },
+                    { name: "Westkapelle", coords: [51.5375, 3.4369], liberationDate: "01-11-1944", images: ["/assets/images/Westkapelle/FO039809.jpg", "/assets/images/Westkapelle/FO040023.jpg", "/assets/images/Westkapelle/FO040039.jpg"] },
+                    { name: "Vlissingen", coords: [51.4426, 3.5739], liberationDate: "01-11-1944", images: ["/assets/images/Vlissingen/35483.jpg", "/assets/images/Vlissingen/35530.jpg", "/assets/images/Vlissingen/35531.jpg", "/assets/images/Vlissingen/35533.jpg", "/assets/images/Vlissingen/35534.jpg", "/assets/images/Vlissingen/35537.jpg", "/assets/images/Vlissingen/35541.jpg", "/assets/images/Vlissingen/35803.jpg"] },
+                    { name: "Dishoek", coords: [51.4694, 3.5300], liberationDate: "03-11-1944" },
+                    { name: "Zoutelande", coords: [51.4922, 3.4877], liberationDate: "03-11-1944" },
+                    { name: "Rilland", coords: [51.4339, 4.1486], liberationDate: "25-10-1944" },
+                    { name: "Tholen", coords: [51.5339, 4.2194], liberationDate: "04-11-1944" },
+                    { name: "St. Annaland", coords: [51.5708, 4.1072], liberationDate: "Early Nov 1944" },
+                    { name: "St. Philipsland", coords: [51.6053, 4.0608], liberationDate: "Early Nov 1944" },
+                    { name: "Zierikzee", coords: [51.6494, 3.9167], liberationDate: "Early Nov 1944" },
+                    { name: "Brouwershaven", coords: [51.7258, 3.9092], liberationDate: "Early Nov 1944" }
+                ];
+
+                troopCities.forEach(city => {
+                    const tintedIcon = L.icon({
+                        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+                        iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+                        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        className: 'tint-pin'
+                    });
+
+
+                    const marker = L.marker(city.coords, { icon: tintedIcon }).addTo(map);
+
+                    let popupHtml = `
+    <strong>${city.name}</strong><br/>
+    Liberated: <em>${city.liberationDate}</em>
+  `;
+
+                    if (city.images && city.images.length) {
+                        // show just the first image as a small thumbnail…
+                        popupHtml += `
+      <div style="margin-top:8px;">
+        <img 
+          src="${city.images[0]}" 
+          style="width:100px; height:auto; display:block; margin-bottom:4px;"
+          alt="${city.name} thumbnail"
+        >
+        <a href="${city.images[0]}" target="_blank" style="text-decoration:none; color:#b45309;">
+          View all images
+        </a>
+      </div>
+    `;
+                    }
+                    marker.bindPopup(popupHtml);
+                });
+
+                const movementTroops = [
+                    // Antwerp → Hulst (19-9)
+                    [[51.2194, 4.4025], [51.3725, 4.0100]],
+                    // Hulst → Axel → Philippine (mid-Sept)
+                    [[51.3725, 4.0100], [51.3090, 3.9815], [51.3130, 3.8890]],
+                    // Philippine → Sas van Gent (19-9)
+                    [[51.3130, 3.8890], [51.3041, 3.8267]],
+                    // Sas van Gent → Terneuzen (20-9)
+                    [[51.3041, 3.8267], [51.3380, 3.8360]],
+                    // Terneuzen → Zaamslag → Hoek → Biervliet → IJzendijke (17-10)
+                    [[51.3380, 3.8360], [51.3266, 3.6492], [51.3323, 3.6270], [51.3438, 3.5526], [51.3250, 3.5908]],
+                    // IJzendijke → Oostburg → Zuidzande (29-10)
+                    [[51.3250, 3.5908], [51.3391, 3.4710], [51.4760, 3.4766]],
+                    // Zuidzande → Retranchement → Sluis (1-11)
+                    [[51.4760, 3.4766], [51.4780, 3.4470], [51.3594, 3.5831]]
+                ];
+
+                const movementZB = [
+                    [[51.3380, 3.8360], [51.4845, 3.8963]],        // Terneuzen → Baarland
+                    [[51.4845, 3.8963], [51.5035, 3.8677], [51.4702, 3.8962], [51.5040, 3.8740]], // Baarland→Borssele→s-Gravenpolder→Goes
+                    [[51.5040, 3.8740], [51.5860, 3.8671], [51.5701, 3.8407]], // Goes→Wolphaartsdijk→Yerseke
+                    [[51.5701, 3.8407], [51.4936, 3.8921]],        // Yerseke→Krabbendijke
+                    [[51.4936, 3.8921], [51.4339, 4.1486]]         // Krabbendijke→Rilland
+                ];
+
+                const crossingWalcheren = [
+                    [[51.4743, 3.8997], [51.4873, 3.9043]],        // South Beveland→Sloedam→Arnemuiden
+                    [[51.4873, 3.9043], [51.4986, 3.6109]],        // Arnemuiden→Middelburg
+                    [[51.4986, 3.6109], [51.5736, 3.5511], [51.5636, 3.4931]], // Middelburg→Oostkapelle→Domburg
+                    [[51.5636, 3.4931], [51.5375, 3.4369]],        // Domburg→Westkapelle
+                    [[51.4986, 3.6109], [51.4426, 3.5739]],        // Middelburg→Vlissingen
+                    [[51.4426, 3.5739], [51.4694, 3.5300], [51.4922, 3.4877]], // Vlissingen→Dishoek→Zoutelande
+                    [[51.4339, 4.1486], [51.5339, 4.2194]],        // Rilland→Tholen
+                    [[51.5339, 4.2194], [51.5708, 4.1072], [51.6053, 4.0608], [51.6494, 3.9167], [51.7258, 3.9092]] // Tholen→…→Brouwershaven
+                ];
+
+                function addTroopPath(path, color) {
+                    // 1) Draw a semi-transparent dashed line
+                    L.polyline(path, {
+                        color: color,
+                        weight: 4,
+                        opacity: 0.6,
+                        dashArray: '8,6'
+                    }).addTo(map);
+
+                    // 2) Smaller arrows with a subtle drop-shadow, only on longer segments
+                    path.slice(0, -1).forEach((pt, i) => {
+                        const next = path[i + 1];
+                        // only if segment is “long enough” (~1km). Map.distance uses meters.
+                        if (map.distance(pt, next) < 1000) return;
+
+                        // midpoint
+                        const midLat = (pt[0] + next[0]) / 2;
+                        const midLng = (pt[1] + next[1]) / 2;
+
+                        // angle
+                        const angle = Math.atan2(
+                            next[1] - pt[1],
+                            next[0] - pt[0]
+                        ) * 180 / Math.PI;
+
+                        // smaller, fainter arrow
+                        const arrowIcon = L.divIcon({
+                            className: '',
+                            html: `
+        <div style="
+          transform: rotate(${angle}deg);
+          width:12px; height:12px;
+          display:flex; align-items:center; justify-content:center;
+          filter: drop-shadow(0 0 1px rgba(0,0,0,0.5));
+        ">
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <polygon points="0,0 10,5 0,10" fill="${color}" opacity="0.8"/>
+          </svg>
+        </div>
+      `,
+                            iconSize: [12, 12],
+                            iconAnchor: [6, 6],
+                            interactive: false
+                        });
+
+                        L.marker([midLat, midLng], { icon: arrowIcon }).addTo(map);
+                    });
+                }
+
+                movementTroops.forEach(leg => addTroopPath(leg, 'red'));
+                movementZB.forEach(leg => addTroopPath(leg, 'gray'));
+                crossingWalcheren.forEach(leg => addTroopPath(leg, 'green'));
+
+                window._mapInitialized = true;
+            }
+        }
+
+        function switchView(targetId) {
+            // hide every major section
+            [
+                "titlePage",
+                "mapView",
+                "walcherenView",
+                "artifactGallery",
+                "storyMode",
+            ].forEach((id) => document.getElementById(id).classList.add("hidden"));
+            // show target
+            document.getElementById(targetId).classList.remove("hidden");
+        }
+
+        /* --------------  MENU  -------------- */
+        function toggleMenu() {
+            document.getElementById("sideMenu").classList.toggle("open");
+        }
+        document.addEventListener("click", (e) => {
+            const menu = document.getElementById("sideMenu");
+            const btn = document.getElementById("menuToggle");
+            if (!menu.contains(e.target) && !btn.contains(e.target))
+                menu.classList.remove("open");
+        });
+
+        // Navigation Functions
+        function startExperience() {
+            document.getElementById('titlePage').classList.add('hidden');
+            document.getElementById('mapView').classList.remove('hidden');
+            currentView = 'map';
+
+            loadMap();
+        }
+
+        function backToMain() {
+            document.getElementById('walcherenView').classList.add('hidden');
+            document.getElementById('mapView').classList.remove('hidden');
+            currentView = 'map';
+        }
+
+        // Story Mode Functions
+        function startStory() {
+            document.getElementById('titlePage').classList.add('hidden');
+            document.getElementById('mapView').classList.add('hidden');
+            document.getElementById('storyMode').classList.remove('hidden');
+            storySlideIndex = 0;
+            showStorySlide();
+        }
+
+        function showStorySlide() {
+            const slide = storySlides[storySlideIndex];
+            const content = document.getElementById('storyContent');
+
+            content.innerHTML = `
+                <div class="story-slide active">
+                    <img src="${slide.image}" alt="${slide.title}">
+                    <h2>${slide.title}</h2>
+                    <p>${slide.content}</p>
+                </div>
+            `;
+        }
+
+        function nextStorySlide() {
+            storySlideIndex++;
+            if (storySlideIndex >= storySlides.length) {
+                exitStory();
+                return;
+            }
+            showStorySlide();
+        }
+
+        function exitStory() {
+            document.getElementById('mapView').classList.remove('hidden');
+            document.getElementById('storyMode').classList.add('hidden');
+            storySlideIndex = 0;
+            currentView = 'map';
+
+            loadMap();
+        }
+
+        function backToMap() {
+            switchView("mapView");
+        }
+        function switchView(id) {
+            [
+                "titlePage",
+                "mapView",
+                "walcherenView",
+                "artifactGallery",
+                "storyMode",
+            ].forEach((s) => document.getElementById(s)?.classList.add("hidden"));
+            document.getElementById(id)?.classList.remove("hidden");
+        }
+
+        function buildGalleryFilters() {
+            const cont = document.getElementById("galleryFilters");
+            cont.innerHTML = "";
+            const cats = new Set(
+                Object.values(artifacts)
+                    .flat()
+                    .map((a) => a.category)
+            );
+            ["All", ...cats].forEach((c) => {
+                const b = document.createElement("button");
+                b.className = c === galleryCategory ? "btn" : "btn-secondary";
+                b.textContent = c;
+                b.onclick = () => {
+                    galleryCategory = c;
+                    renderArtifactGrid();
+                    buildGalleryFilters();
+                };
+                cont.appendChild(b);
+            });
+        }
+
+        /* === modal === */
+        function openModal(a) {
+            document.getElementById("modalImg").src = a.image;
+            document.getElementById("modalImg").alt = a.name;
+            document.getElementById("modalTitle").textContent = a.name;
+            document.getElementById("modalDesc").textContent = a.description;
+            document.getElementById("artifactModal").classList.remove("hidden");
+        }
+        function closeModal(e) {
+            if (
+                e.target.classList.contains("modal") ||
+                e.target.classList.contains("modal-close")
+            ) {
+                document.getElementById("artifactModal").classList.add("hidden");
+            }
+        }
+
+        /* --------------  ARTIFACT GALLERY  -------------- */
+        function showArtifactGallery() {
+            buildGalleryFilters();
+            renderArtifactGrid();
+            switchView("artifactGallery");
+            currentView = "gallery";
+        }
+
+        function buildGalleryFilters() {
+            const allArtifacts = Object.values(artifacts).flat();
+            const categorySet = new Set(allArtifacts.map((a) => a.category));
+            const filterContainer = document.getElementById("galleryFilters");
+            filterContainer.innerHTML = "";
+            // "All" button first
+            filterContainer.appendChild(createFilterBtn("All"));
+            // alphabetical order for the rest
+            [...categorySet]
+                .sort()
+                .forEach((cat) => filterContainer.appendChild(createFilterBtn(cat)));
+        }
+        function createFilterBtn(label) {
+            const btn = document.createElement("button");
+            btn.className = label === galleryCategory ? "btn" : "btn-secondary";
+            btn.textContent = label;
+            btn.onclick = () => {
+                galleryCategory = label;
+                showArtifactGallery(); // re-render with new filter
+            };
+            return btn;
+        }
+
+        function openModal(art) {
+            const m = document.getElementById("artifactModal");
+            document.getElementById("modalImg").src = art.image;
+            document.getElementById("modalImg").alt = art.name;
+            document.getElementById("modalTitle").textContent = art.name;
+            document.getElementById("modalDesc").textContent = art.description;
+            m.classList.remove("hidden");
+        }
+
+        function closeModal(e) {
+            if (
+                e.target.classList.contains("modal") ||
+                e.target.classList.contains("modal-close")
+            ) {
+                document.getElementById("artifactModal").classList.add("hidden");
+            }
+        }
+
+        function renderArtifactGrid() {
+            const grid = document.getElementById("artifactGrid");
+            grid.innerHTML = "";
+            const filtered =
+                galleryCategory === "All"
+                    ? artifacts
+                    : artifacts.filter((a) => a.category === galleryCategory);
+
+            filtered.forEach((art) => {
+                const card = document.createElement("div");
+                card.className = "artifact-card";
+                const shortTitle = art.name;
+                card.innerHTML = `
+      <img src="${art.image}" alt="${art.name}" />
+      <div class="artifact-overlay">
+        <h4>${shortTitle}</h4>
+      </div>
+    `;
+                card.onclick = () => openModal(art);
+                grid.appendChild(card);
+            });
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Battle of the Scheldt Interactive Map Loaded');
+        });
+    </script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</body>
+
+</html>
